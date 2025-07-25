@@ -9,8 +9,7 @@ import type {
   CycleDashboard,
   NineBoxData,
   SelfEvaluation,
-  LeaderEvaluation,
-  WrittenFeedback
+  LeaderEvaluation
 } from '../types/evaluation.types';
 import type { UserWithDetails } from '../types/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -71,7 +70,11 @@ interface UseEvaluationReturn {
     cycleId: string;
     employeeId: string;
     competencies: EvaluationCompetency[];
-    writtenFeedback: WrittenFeedback;
+    knowledge?: string[];
+    tools?: string[];
+    strengths?: string[];
+    qualities?: string[];
+    observations?: string[];
   }) => Promise<void>;
   
   saveLeaderEvaluation: (data: {
@@ -247,16 +250,15 @@ export const useEvaluation = (): UseEvaluationReturn => {
     cycleId: string;
     employeeId: string;
     competencies: EvaluationCompetency[];
-    writtenFeedback: WrittenFeedback;
+    knowledge?: string[];
+    tools?: string[];
+    strengths?: string[];
+    qualities?: string[];
+    observations?: string[];
   }) => {
     try {
       setLoading(true);
-      await evaluationService.saveSelfEvaluation(
-        data.cycleId,
-        data.employeeId,
-        data.competencies,
-        data.writtenFeedback
-      );
+      await evaluationService.saveSelfEvaluation(data);
       toast.success('Autoavaliação salva com sucesso!');
     } catch (error: any) {
       console.error('Erro ao salvar autoavaliação:', error);

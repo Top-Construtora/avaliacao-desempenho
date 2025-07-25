@@ -3,7 +3,6 @@ import type {
   EvaluationCycle,
   EvaluationExtended,
   EvaluationCompetency,
-  WrittenFeedback,
   ConsensusMeeting,
   CycleDashboard,
   NineBoxData,
@@ -121,18 +120,18 @@ export const evaluationService = {
     }
   },
 
-  async saveSelfEvaluation(
-    cycleId: string,
-    employeeId: string,
-    competencies: EvaluationCompetency[],
-    writtenFeedback: WrittenFeedback
-  ): Promise<SelfEvaluation> {
-    const response = await api.post('/evaluations/self', {
-      cycleId,
-      employeeId,
-      competencies,
-      writtenFeedback
-    });
+  async saveSelfEvaluation(data: {
+    cycleId: string;
+    employeeId: string;
+    competencies: EvaluationCompetency[];
+    knowledge?: string[];
+    tools?: string[];
+    strengths?: string[];
+    qualities?: string[];
+    observations?: string[];
+  }): Promise<SelfEvaluation> {
+    console.log('Sending self evaluation data:', data);
+    const response = await api.post('/evaluations/self', data);
     return response.data;
   },
 

@@ -258,9 +258,17 @@ export const evaluationController = {
     try {
       const authReq = req as AuthRequest;
       
+      // Limpar campos desnecessários
+      const cleanedBody = { ...req.body };
+      delete cleanedBody.written_feedback;
+      delete cleanedBody.writtenFeedback;
+      
+      console.log('Controller received body:', req.body);
+      console.log('Controller sending cleaned body:', cleanedBody);
+      
       const evaluation = await evaluationService.createSelfEvaluation(
         authReq.supabase,
-        req.body
+        cleanedBody
       );
       
       res.json({

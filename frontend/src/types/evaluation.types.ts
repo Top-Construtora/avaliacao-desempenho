@@ -12,10 +12,6 @@ export interface BaseEvaluation {
   behavioral_score?: number;
   deliveries_score?: number;
   final_score?: number;
-  strengths?: string;
-  improvements?: string;
-  observations?: string;
-  written_feedback?: WrittenFeedback;
   evaluation_date: string;
   created_at: string;
   updated_at: string;
@@ -23,13 +19,21 @@ export interface BaseEvaluation {
 
 // Autoavaliação
 export interface SelfEvaluation extends BaseEvaluation {
-  // Autoavaliação não tem campos adicionais específicos
+  knowledge?: string[];
+  tools?: string[];
+  strengths_internal?: string[];
+  qualities?: string[];
+  improvements?: string[];
+  observations?: string[];
 }
 
 // Avaliação de Líder
 export interface LeaderEvaluation extends BaseEvaluation {
   evaluator_id: string;
   potential_score?: number;
+  strengths?: string;
+  improvements?: string;
+  observations?: string;
 }
 
 // Tipo unificado para queries (usando a view)
@@ -117,13 +121,6 @@ export interface EvaluationExtended {
   competencies?: EvaluationCompetency[];
 }
 
-export interface WrittenFeedback {
-  achievements?: string;
-  challenges?: string;
-  goals?: string;
-  development_areas?: string;
-  additional_comments?: string;
-}
 
 export interface ConsensusMeeting {
   id: string;

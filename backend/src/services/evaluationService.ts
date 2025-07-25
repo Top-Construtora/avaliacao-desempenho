@@ -6,8 +6,7 @@ import type {
   EvaluationCompetency,
   ConsensusMeeting,
   CycleDashboard,
-  NineBoxData,
-  WrittenFeedback
+  NineBoxData
 } from '../types';
 
 export const evaluationService = {
@@ -307,29 +306,60 @@ export const evaluationService = {
       const deliveriesScore = this.calculateCategoryScore(evaluationData.competencies, 'deliveries');
       const finalScore = this.calculateFinalScore(evaluationData.competencies);
 
+      // Mapear os dados do frontend para os arrays do banco
+      const knowledge = evaluationData.knowledge || [];
+      const tools = evaluationData.tools || [];
+      const strengths = evaluationData.strengths || [];
+      const qualities = evaluationData.qualities || [];
+
       // Criar a autoavaliação
-      const { data: evaluation, error: evalError } = await supabase
+      const insertData: any = {
+        cycle_id: evaluationData.cycleId,
+        employee_id: evaluationData.employeeId,
+        status: 'completed',
+        technical_score: technicalScore,
+        behavioral_score: behavioralScore,
+        deliveries_score: deliveriesScore,
+        final_score: finalScore,
+        knowledge: knowledge,
+        tools: tools,
+        strengths_internal: strengths,
+        qualities: qualities,
+        improvements: [],
+        observations: evaluationData.observations || [],
+        evaluation_date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+
+      console.log('Inserting self evaluation data:', insertData);
+      console.log('Raw evaluation data received:', evaluationData);
+
+      // Primeiro inserir sem select para evitar problemas de cache
+      const { error: evalError } = await supabase
         .from('self_evaluations')
-        .insert({
-          cycle_id: evaluationData.cycleId,
-          employee_id: evaluationData.employeeId,
-          status: 'completed',
-          technical_score: technicalScore,
-          behavioral_score: behavioralScore,
-          deliveries_score: deliveriesScore,
-          final_score: finalScore,
-          strengths: evaluationData.writtenFeedback?.achievements || '',
-          improvements: evaluationData.writtenFeedback?.development_areas || '',
-          observations: evaluationData.writtenFeedback?.additional_comments || '',
-          written_feedback: evaluationData.writtenFeedback,
-          evaluation_date: new Date().toISOString().split('T')[0],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
+        .insert(insertData);
+
+      if (evalError) {
+        console.error('Error inserting self evaluation:', evalError);
+        throw new ApiError(500, evalError.message);
+      }
+
+      // Depois buscar o registro inserido
+      const { data: evaluation, error: selectError } = await supabase
+        .from('self_evaluations')
+        .select('*')
+        .eq('cycle_id', evaluationData.cycleId)
+        .eq('employee_id', evaluationData.employeeId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (evalError) throw new ApiError(500, evalError.message);
+      if (selectError) {
+        console.error('Error selecting self evaluation:', selectError);
+        throw new ApiError(500, selectError.message);
+      }
 
       // Salvar as competências avaliadas
       if (evaluationData.competencies && evaluationData.competencies.length > 0) {
@@ -412,7 +442,6 @@ export const evaluationService = {
           strengths: evaluationData.feedback?.strengths || '',
           improvements: evaluationData.feedback?.improvements || '',
           observations: evaluationData.feedback?.observations || '',
-          written_feedback: evaluationData.feedback,
           evaluation_date: new Date().toISOString().split('T')[0],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
