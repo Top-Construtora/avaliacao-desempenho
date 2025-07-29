@@ -100,7 +100,6 @@ export interface EvaluationExtended {
   potential_score?: number;
   consensus_performance_score?: number;
   consensus_potential_score?: number;
-  written_feedback?: WrittenFeedback;
   strengths?: string;
   improvements?: string;
   observations?: string;
@@ -318,7 +317,6 @@ export interface EvaluationFormData {
   employeeId: string;
   evaluatorId?: string;
   competencies: EvaluationCompetency[];
-  writtenFeedback?: WrittenFeedback;
   potentialScore?: number;
   feedback?: {
     strengths?: string;

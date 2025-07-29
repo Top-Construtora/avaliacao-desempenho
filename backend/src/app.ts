@@ -88,9 +88,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Parsers with increased limits
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Middleware adicional para garantir CORS em todas as respostas
 app.use((req, res, next) => {
