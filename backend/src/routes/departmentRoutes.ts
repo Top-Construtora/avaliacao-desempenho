@@ -14,12 +14,12 @@ router.get('/', departmentController.getDepartments as any);
 router.get('/:id', departmentController.getDepartmentById as any);
 
 // Criar departamento - apenas diretores
-router.post('/', authorizeRoles(['director']) as any, departmentController.createDepartment as any);
+router.post('/', authorizeRoles(['master', 'director']) as any, departmentController.createDepartment as any);
 
 // Atualizar departamento - apenas diretores
-router.put('/:id', authorizeRoles(['director']) as any, departmentController.updateDepartment as any);
+router.put('/:id', authorizeRoles(['master', 'director']) as any, departmentController.updateDepartment as any);
 
 // Deletar departamento - apenas diretores
-router.delete('/:id', authorizeRoles(['director']) as any, departmentController.deleteDepartment as any);
+router.delete('/:id', authorizeRoles(['master', 'director']) as any, departmentController.deleteDepartment as any);
 
 export default router;

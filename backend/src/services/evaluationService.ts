@@ -746,5 +746,195 @@ export const evaluationService = {
       console.error('Service error:', error);
       throw error;
     }
+  },
+
+  // ====================================
+  // UPLOAD EM LOTE
+  // ====================================
+
+  // Criar avaliações em lote
+  async bulkCreateEvaluations(
+    supabase: any, 
+    cycleId: string, 
+    evaluationsData: any[], 
+    createdBy: string
+  ) {
+    try {
+      const results = {
+        success: 0,
+        errors: [] as string[]
+      };
+
+      for (const evalData of evaluationsData) {
+        try {
+          // Criar autoavaliação se tiver dados
+          if (this.hasValidScores(evalData.selfEvaluation)) {
+            await this.createSimpleEvaluation(supabase, {
+              employee_id: evalData.userId,
+              evaluator_id: evalData.userId,
+              cycle_id: cycleId,
+              type: 'self',
+              technical_score: evalData.selfEvaluation.technical,
+              behavioral_score: evalData.selfEvaluation.behavioral,
+              deliveries_score: evalData.selfEvaluation.deliveries,
+              status: 'completed',
+              evaluation_date: new Date().toISOString()
+            });
+          }
+
+          // Criar avaliação do líder se tiver dados
+          if (this.hasValidScores(evalData.leaderEvaluation)) {
+            await this.createSimpleEvaluation(supabase, {
+              employee_id: evalData.userId,
+              evaluator_id: createdBy, // Master como avaliador
+              cycle_id: cycleId,
+              type: 'leader',
+              technical_score: evalData.leaderEvaluation.technical,
+              behavioral_score: evalData.leaderEvaluation.behavioral,
+              deliveries_score: evalData.leaderEvaluation.deliveries,
+              potential_score: evalData.leaderEvaluation.potential,
+              status: 'completed',
+              evaluation_date: new Date().toISOString()
+            });
+          }
+
+          // Criar competências do toolkit se tiver dados
+          if (evalData.toolkit && Object.keys(evalData.toolkit).length > 0) {
+            await this.createToolkitCompetencies(supabase, evalData.userId, evalData.toolkit, cycleId);
+          }
+
+          // Criar PDI se tiver dados
+          if (this.hasValidPDI(evalData.pdi)) {
+            await this.createPDI(supabase, {
+              employee_id: evalData.userId,
+              goals: [
+                evalData.pdi.shortTermGoals,
+                evalData.pdi.mediumTermGoals,
+                evalData.pdi.longTermGoals
+              ].filter(goal => goal.trim()),
+              actions: [evalData.pdi.developmentActions].filter(action => action.trim()),
+              resources: [evalData.pdi.resources].filter(resource => resource.trim()),
+              timeline: evalData.pdi.timeline,
+              created_by: createdBy
+            });
+          }
+
+          results.success++;
+        } catch (error: any) {
+          results.errors.push(`Erro ao processar usuário ${evalData.userId}: ${error.message}`);
+        }
+      }
+
+      return results;
+    } catch (error: any) {
+      console.error('Service error:', error);
+      throw error;
+    }
+  },
+
+  // Validar dados em lote
+  async validateBulkEvaluations(evaluationsData: any[]) {
+    const errors: string[] = [];
+    
+    for (const evalData of evaluationsData) {
+      // Validar scores (1-5)
+      if (evalData.selfEvaluation) {
+        const selfErrors = this.validateScores(evalData.selfEvaluation, 'Autoavaliação');
+        errors.push(...selfErrors);
+      }
+      
+      if (evalData.leaderEvaluation) {
+        const leaderErrors = this.validateScores(evalData.leaderEvaluation, 'Avaliação do Líder');
+        errors.push(...leaderErrors);
+      }
+      
+      if (evalData.toolkit) {
+        const toolkitErrors = this.validateScores(evalData.toolkit, 'Toolkit');
+        errors.push(...toolkitErrors);
+      }
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  },
+
+  // Métodos auxiliares
+  hasValidScores(scores: any): boolean {
+    if (!scores) return false;
+    return Object.values(scores).some(score => score !== null && score !== undefined);
+  },
+
+  hasValidPDI(pdi: any): boolean {
+    if (!pdi) return false;
+    return Object.values(pdi).some(value => value && value.toString().trim() !== '');
+  },
+
+  validateScores(scores: any, section: string): string[] {
+    const errors: string[] = [];
+    
+    Object.entries(scores).forEach(([key, value]: [string, any]) => {
+      if (value !== null && value !== undefined) {
+        const score = Number(value);
+        if (isNaN(score) || score < 1 || score > 5) {
+          errors.push(`${section}: ${key} deve estar entre 1 e 5`);
+        }
+      }
+    });
+    
+    return errors;
+  },
+
+
+  async createToolkitCompetencies(supabase: any, userId: string, toolkit: any, cycleId: string) {
+    const competencies = Object.entries(toolkit)
+      .filter(([_, score]) => score !== null && score !== undefined)
+      .map(([name, score]) => ({
+        employee_id: userId,
+        criterion_name: name,
+        criterion_description: `Competência: ${name}`,
+        category: 'behavioral',
+        score: Number(score),
+        cycle_id: cycleId
+      }));
+
+    if (competencies.length > 0) {
+      const { error } = await supabase
+        .from('evaluation_competencies')
+        .insert(competencies);
+
+      if (error) throw new ApiError(500, error.message);
+    }
+  },
+
+  async createPDI(supabase: any, data: any) {
+    const { data: result, error } = await supabase
+      .from('development_plans')
+      .insert({
+        employee_id: data.employee_id,
+        goals: data.goals,
+        actions: data.actions,
+        resources: data.resources,
+        timeline: data.timeline,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (error) throw new ApiError(500, error.message);
+    return result;
+  },
+
+  // Método simples para criar avaliações diretas
+  async createSimpleEvaluation(supabase: any, data: any) {
+    const { data: result, error } = await supabase
+      .from('evaluations')
+      .insert(data)
+      .select()
+      .single();
+
+    if (error) throw new ApiError(500, error.message);
+    return result;
   }
 };

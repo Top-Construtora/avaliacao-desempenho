@@ -1,6 +1,6 @@
 // Tipos relacionados à autenticação e permissões
 
-export type UserRole = 'director' | 'leader' | 'employee';
+export type UserRole = 'master' | 'director' | 'leader' | 'employee';
 
 export interface Permission {
   resource: string;
@@ -14,6 +14,17 @@ export interface UserPermissions {
 
 // Mapeamento de permissões por papel
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  master: [
+    { resource: 'users', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'teams', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'departments', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'evaluations', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'consensus', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'pdi', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'reports', actions: ['read'] },
+    { resource: 'audit_logs', actions: ['read'] },
+    { resource: 'salary', actions: ['create', 'read', 'update', 'delete'] },
+  ],
   director: [
     { resource: 'users', actions: ['create', 'read', 'update', 'delete'] },
     { resource: 'teams', actions: ['create', 'read', 'update', 'delete'] },
@@ -53,7 +64,8 @@ export function hasPermission(
 }
 
 // Helper para determinar role baseado nos booleans
-export function getUserRole(user: { is_director: boolean; is_leader: boolean }): UserRole {
+export function getUserRole(user: { is_director: boolean; is_leader: boolean; is_master?: boolean }): UserRole {
+  if (user.is_master) return 'master';
   if (user.is_director) return 'director';
   if (user.is_leader) return 'leader';
   return 'employee';
@@ -74,47 +86,47 @@ export const ROUTE_ACCESS: Record<string, AccessControl> = {
   '/reset-password': { requireAuth: false },
   '/self-evaluation': { 
     requireAuth: true, 
-    requireRoles: ['employee', 'leader', 'director'],
+    requireRoles: ['employee', 'leader', 'director', 'master'],
     requireActive: true 
   },
   '/leader-evaluation': { 
     requireAuth: true, 
-    requireRoles: ['leader', 'director'],
+    requireRoles: ['leader', 'director', 'master'],
     requireActive: true 
   },
   '/potential-evaluation': { 
     requireAuth: true, 
-    requireRoles: ['leader', 'director'],
+    requireRoles: ['leader', 'director', 'master'],
     requireActive: true 
   },
   '/consensus': { 
     requireAuth: true, 
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true 
   },
   '/nine-box': { 
     requireAuth: true, 
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true 
   },
   '/action-plan': { 
     requireAuth: true, 
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true 
   },
   '/reports': { 
     requireAuth: true, 
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true 
   },
   '/users': { 
     requireAuth: true, 
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true 
   },
   '/users/new': { 
     requireAuth: true, 
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true 
   },
   '/notifications': { 
@@ -127,12 +139,12 @@ export const ROUTE_ACCESS: Record<string, AccessControl> = {
   },
   '/salary': {
     requireAuth: true,
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true
   },
   '/salary/tracks': {
     requireAuth: true,
-    requireRoles: ['director'],
+    requireRoles: ['director', 'master'],
     requireActive: true
   },
   '/salary/progressions': {
@@ -161,13 +173,13 @@ export function validateSecurityOperation(
   // Validações específicas por operação
   switch (operation) {
     case 'promote_to_director':
-      if (userRole !== 'director') {
+      if (userRole !== 'director' && userRole !== 'master') {
         errors.push('Apenas diretores podem promover outros usuários a diretor');
       }
       break;
     
     case 'deactivate_user':
-      if (userRole !== 'director') {
+      if (userRole !== 'director' && userRole !== 'master') {
         errors.push('Apenas diretores podem desativar usuários');
       }
       if (targetData?.is_director) {
@@ -176,7 +188,7 @@ export function validateSecurityOperation(
       break;
     
     case 'delete_department':
-      if (userRole !== 'director') {
+      if (userRole !== 'director' && userRole !== 'master') {
         errors.push('Apenas diretores podem excluir departamentos');
       }
       if (targetData?.teams_count > 0) {
@@ -185,19 +197,19 @@ export function validateSecurityOperation(
       break;
     
     case 'change_team_leader':
-      if (userRole !== 'director' && userRole !== 'leader') {
+      if (userRole !== 'director' && userRole !== 'leader' && userRole !== 'master') {
         errors.push('Apenas diretores e líderes podem alterar responsáveis de times');
       }
       break;
 
     case 'modify_salary':
-      if (userRole !== 'director') {
+      if (userRole !== 'director' && userRole !== 'master') {
         errors.push('Apenas diretores podem modificar salários');
       }
       break;
 
     case 'approve_progression':
-      if (userRole !== 'director') {
+      if (userRole !== 'director' && userRole !== 'master') {
         errors.push('Apenas diretores podem aprovar progressões');
       }
       break;
@@ -218,6 +230,7 @@ export interface AuthContext {
     name: string;
     is_director: boolean;
     is_leader: boolean;
+    is_master: boolean;
     active: boolean;
   };
   role: UserRole;

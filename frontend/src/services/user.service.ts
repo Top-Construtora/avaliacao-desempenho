@@ -6,6 +6,7 @@ export const userService = {
     active?: boolean;
     is_leader?: boolean;
     is_director?: boolean;
+    is_master?: boolean;
     reports_to?: string;
   }): Promise<User[]> {
     const queryParams = new URLSearchParams(

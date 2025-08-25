@@ -444,5 +444,70 @@ export const evaluationController = {
       console.error('Controller error:', error);
       next(error);
     }
+  },
+
+  // ====================================
+  // UPLOAD EM LOTE
+  // ====================================
+
+  // Upload em lote de avaliações
+  async bulkUploadEvaluations(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authReq = req as AuthRequest;
+      const { cycleId, evaluations } = req.body;
+
+      if (!cycleId || !evaluations || !Array.isArray(evaluations)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Parâmetros inválidos. cycleId e evaluations são obrigatórios.'
+        });
+      }
+
+      if (!authReq.user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Usuário não autenticado'
+        });
+      }
+
+      const result = await evaluationService.bulkCreateEvaluations(
+        authReq.supabase,
+        cycleId,
+        evaluations,
+        authReq.user.id
+      );
+
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Controller error:', error);
+      next(error);
+    }
+  },
+
+  // Validar dados em lote
+  async bulkValidateEvaluations(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { evaluations } = req.body;
+
+      if (!evaluations || !Array.isArray(evaluations)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Parâmetro evaluations é obrigatório.'
+        });
+      }
+
+      const result = await evaluationService.validateBulkEvaluations(evaluations);
+
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Controller error:', error);
+      next(error);
+    }
   }
 };

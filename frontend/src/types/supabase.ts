@@ -45,6 +45,7 @@ export interface Database {
           position: string
           is_leader: boolean
           is_director: boolean
+          is_master: boolean
           phone: string | null
           birth_date: string | null
           join_date: string
@@ -84,6 +85,7 @@ export interface Database {
           position: string
           is_leader?: boolean
           is_director?: boolean
+          is_master?: boolean
           phone?: string | null
           birth_date?: string | null
           join_date?: string
@@ -123,6 +125,7 @@ export interface Database {
           position?: string
           is_leader?: boolean
           is_director?: boolean
+          is_master?: boolean
           phone?: string | null
           birth_date?: string | null
           join_date?: string
@@ -324,9 +327,9 @@ export type Department = Database['public']['Tables']['departments']['Row']
 export type DepartmentInsert = Database['public']['Tables']['departments']['Insert']
 export type DepartmentUpdate = Database['public']['Tables']['departments']['Update']
 
-export type User = Database['public']['Tables']['users']['Row']
-export type UserInsert = Database['public']['Tables']['users']['Insert']
-export type UserUpdate = Database['public']['Tables']['users']['Update']
+export type SupabaseUser = Database['public']['Tables']['users']['Row']
+export type SupabaseUserInsert = Database['public']['Tables']['users']['Insert']
+export type SupabaseUserUpdate = Database['public']['Tables']['users']['Update']
 
 export type Team = Database['public']['Tables']['teams']['Row']
 export type TeamInsert = Database['public']['Tables']['teams']['Insert']
@@ -343,7 +346,7 @@ export type EvaluationCriterion = Database['public']['Tables']['evaluation_crite
 export type EvaluationCriterionInsert = Database['public']['Tables']['evaluation_criteria']['Insert']
 
 // Tipos compostos (com joins)
-export interface UserWithDetails extends User {
+export interface UserWithDetails extends SupabaseUser {
   teams?: Team[]
   departments?: Department[]
   manager?: Pick<User, 'id' | 'name' | 'email'>

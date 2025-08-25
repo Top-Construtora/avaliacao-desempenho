@@ -6,6 +6,7 @@ export interface User {
   position: string;
   is_leader: boolean;
   is_director: boolean;
+  is_master: boolean;
   active: boolean;
   phone?: string | null;
   birth_date?: string | null;
@@ -120,7 +121,12 @@ export interface Team {
 }
 
 // Helper para determinar o "role" baseado nos booleans
-export function getUserRole(user: User): 'admin' | 'director' | 'leader' | 'employee' {
+export function getUserRole(user: User): 'master' | 'admin' | 'director' | 'leader' | 'employee' {
+  // Master tem acesso total a tudo
+  if (user.is_master) {
+    return 'master';
+  }
+  
   // Admin é um caso especial - diretor com email específico
   if (user.email === 'admin@empresa.com' && user.is_director) {
     return 'admin';
@@ -142,6 +148,7 @@ export function hasPermission(user: User, permission: string): boolean {
   const role = getUserRole(user);
   
   const permissions: Record<string, string[]> = {
+    master: ['*'], // Acesso total - pode gerenciar avaliações e PDIs de todos
     admin: ['*'], // Acesso total
     director: [
       'users.manage',
@@ -199,6 +206,7 @@ export interface UpdateUserRequest {
   department_id?: string;
   is_leader?: boolean;
   is_director?: boolean;
+  is_master?: boolean;
   active?: boolean;
   
   // Novos campos

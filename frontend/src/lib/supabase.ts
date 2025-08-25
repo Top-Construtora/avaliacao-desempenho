@@ -35,6 +35,7 @@ export type Database = {
           position: string
           is_leader: boolean
           is_director: boolean
+          is_master: boolean
           phone: string | null
           birth_date: string | null
           join_date: string

@@ -32,7 +32,9 @@ import CycleManagement from './pages/management/CycleManagement';
 import SalaryAdminPage from './pages/management/SalaryAdminPage';
 import TrackPositionsPage from './pages/carrer/TrackPositionsPage';
 import CareerTrackDetail from './pages/carrer/CareerTrackDetail';
-import PdiManagement from './pages/pdi/PdiManagement'; // Import the new PDI Management page
+import PdiManagement from './pages/pdi/PdiManagement';
+import EvaluationManagement from './pages/evaluations/EvaluationManagement';
+import BulkEvaluationUpload from './pages/evaluations/BulkEvaluationUpload';
 
 const USE_SUPABASE_AUTH = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true';
 
@@ -283,6 +285,26 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                    {/* Evaluation Management */}
+                    <Route
+                      path="evaluation-management"
+                      element={
+                        <ProtectedRoute allowedRoles={['director']}>
+                          <EvaluationManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Bulk Evaluation Upload */}
+                    <Route
+                      path="bulk-evaluation-upload"
+                      element={
+                        <ProtectedRoute allowedRoles={['director']}>
+                          <BulkEvaluationUpload />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     {/* PDI Management (New Route) */}
                     <Route path="pdi" element={<ProtectedRoute allowedRoles={['director', 'leader']}><PdiManagement /></ProtectedRoute>} />
                   </Route>
@@ -309,6 +331,8 @@ function App() {
                     <Route index element={<Dashboard />} />
                     <Route path="self-evaluation" element={<SelfEvaluation />} />
                     <Route path="leader-evaluation" element={<LeaderEvaluation />} />
+                    <Route path="evaluation-management" element={<EvaluationManagement />} />
+                    <Route path="bulk-evaluation-upload" element={<BulkEvaluationUpload />} />
                     <Route path="consensus" element={<Consensus />} />
                     <Route path="/users" element={<UserManagement />} />
                     <Route path="/teams" element={<TeamManagement />} />

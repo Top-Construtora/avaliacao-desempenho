@@ -91,11 +91,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Se houver sessão, busca o perfil do usuário
       const { data: profileData, error } = await supabase
         .from('users')
-        .select('*')
+        .select('*, is_master')
         .eq('id', session.user.id)
         .single();
 
+      if (error) {
+        console.error('AuthContext - Error loading profile:', error);
+      }
+
       if (!error && profileData) {
+        console.log('AuthContext - Loaded profile data:', profileData);
+        console.log('AuthContext - is_master field:', profileData.is_master);
         setUser(profileData);
         setProfile(profileData);
         setIsAuthenticated(true);

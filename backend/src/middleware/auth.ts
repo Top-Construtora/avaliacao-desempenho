@@ -91,9 +91,10 @@ export const authorizeRoles = (allowedRoles: string[]) => {
     // Verificar se o usuário tem uma das roles permitidas
     const userRoles: string[] = [];
     
+    if (req.user.is_master) userRoles.push('master');
     if (req.user.is_director) userRoles.push('director');
     if (req.user.is_leader) userRoles.push('leader');
-    if (!req.user.is_director && !req.user.is_leader) userRoles.push('employee');
+    if (!req.user.is_master && !req.user.is_director && !req.user.is_leader) userRoles.push('employee');
 
     const hasPermission = allowedRoles.some(role => userRoles.includes(role));
 

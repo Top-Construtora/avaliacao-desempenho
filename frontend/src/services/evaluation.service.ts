@@ -11,6 +11,33 @@ import type {
   EvaluationSummary
 } from '../types/evaluation.types';
 
+// Interfaces para upload em lote
+interface BulkEvaluationData {
+  userId: string;
+  selfEvaluation: {
+    technical: number | null;
+    behavioral: number | null;
+    deliveries: number | null;
+  };
+  toolkit: {
+    [key: string]: number | null;
+  };
+  leaderEvaluation: {
+    technical: number | null;
+    behavioral: number | null;
+    deliveries: number | null;
+    potential: number | null;
+  };
+  pdi: {
+    shortTermGoals: string;
+    mediumTermGoals: string;
+    longTermGoals: string;
+    developmentActions: string;
+    resources: string;
+    timeline: string;
+  };
+}
+
 export const evaluationService = {
   // ====================================
   // EVALUATION CYCLES
@@ -282,5 +309,78 @@ export const evaluationService = {
       console.error('Erro ao atualizar PDI:', error);
       throw error;
     }
+  },
+
+  // ====================================
+  // BULK EVALUATION UPLOAD
+  // ====================================
+
+  async bulkSaveEvaluations(
+    cycleId: string, 
+    evaluationsData: BulkEvaluationData[]
+  ): Promise<{ success: number; errors: string[] }> {
+    try {
+      const response = await api.post('/evaluations/bulk-upload', {
+        cycleId,
+        evaluations: evaluationsData
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao salvar avaliações em lote:', error);
+      throw error;
+    }
+  },
+
+  async validateBulkData(
+    evaluationsData: BulkEvaluationData[]
+  ): Promise<{ isValid: boolean; errors: string[] }> {
+    try {
+      const response = await api.post('/evaluations/bulk-validate', {
+        evaluations: evaluationsData
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao validar dados em lote:', error);
+      throw error;
+    }
+  },
+
+  // ====================================
+  // MANAGEMENT BULK SAVE
+  // ====================================
+
+  async saveBulkEvaluations(data: {
+    cycleId: string;
+    evaluations: Array<{
+      userId: string;
+      selfEvaluation: {
+        technical: { [key: string]: number };
+        behavioral: { [key: string]: number };
+        deliveries: { [key: string]: number };
+        finalScore: number;
+      };
+      leaderEvaluation: {
+        technical: { [key: string]: number };
+        behavioral: { [key: string]: number };
+        deliveries: { [key: string]: number };
+        potential: number;
+        finalScore: number;
+      };
+      toolkit: { [key: string]: number };
+      pdi: {
+        shortTerm: string;
+        mediumTerm: string;
+        longTerm: string;
+      };
+    }>;
+  }): Promise<void> {
+    console.log('Enviando avaliações em lote:', data);
+    const response = await api.post('/evaluations/bulk-management-save', data);
+    return response.data;
+  },
+
+  // Alias para compatibilidade
+  getEvaluationCycles(): Promise<EvaluationCycle[]> {
+    return this.getAllCycles();
   }
 };

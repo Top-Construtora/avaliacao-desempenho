@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { evaluationController } from '../controllers/evaluationController';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, authorizeRoles } from '../middleware/auth';
 
 const router = Router();
 
@@ -50,5 +50,11 @@ router.put('/consensus/:meetingId/complete', evaluationController.completeConsen
 router.post('/pdi', evaluationController.savePDI);
 router.get('/pdi/:employeeId', evaluationController.getPDI);
 router.put('/pdi/:pdiId', evaluationController.updatePDI);
+
+// ====================================
+// ROTAS DE UPLOAD EM LOTE (MASTER ONLY)
+// ====================================
+router.post('/bulk-upload', authorizeRoles(['master']) as any, evaluationController.bulkUploadEvaluations);
+router.post('/bulk-validate', authorizeRoles(['master']) as any, evaluationController.bulkValidateEvaluations);
 
 export default router;

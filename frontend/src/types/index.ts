@@ -1,6 +1,6 @@
 export type Status = 'pending' | 'in-progress' | 'completed';
 
-export * from './auth';
+// Removido export * para evitar conflitos de tipo User
 
 export type { UserRole, Permission, UserPermissions, AccessControl, AuditLog, SecurityValidation } from './auth';
 export { ROLE_PERMISSIONS, hasPermission, ROUTE_ACCESS, validateSecurityOperation } from './auth';
@@ -76,7 +76,7 @@ export interface Team {
   createdAt: string;
 }
 
-export interface User {
+export interface UserLegacy {
   id: string;
   name: string;
   email: string;

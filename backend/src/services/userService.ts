@@ -8,6 +8,7 @@ export const userService = {
     active?: boolean;
     is_leader?: boolean;
     is_director?: boolean;
+    is_master?: boolean;
     reports_to?: string;
     // Novos filtros
     gender?: string;
@@ -28,6 +29,9 @@ export const userService = {
     }
     if (filters?.is_director !== undefined) {
       query = query.eq('is_director', filters.is_director);
+    }
+    if (filters?.is_master !== undefined) {
+      query = query.eq('is_master', filters.is_master);
     }
     if (filters?.reports_to) {
       query = query.eq('reports_to', filters.reports_to);

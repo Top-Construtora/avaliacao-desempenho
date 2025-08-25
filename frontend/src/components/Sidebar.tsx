@@ -18,6 +18,7 @@ import {
   Plus,
   ChevronDown,
   Building,
+  Upload,
   User,
 } from 'lucide-react';
 import { useAuth, useUserRole } from '../context/AuthContext';
@@ -63,7 +64,7 @@ export default function Sidebar({
       label: 'Cadastrar',
       icon: Plus,
       hasDropdown: true,
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
       subItems: [
         {
           label: 'Cadastrar Usuário',
@@ -86,7 +87,7 @@ export default function Sidebar({
       label: 'Gerenciar',
       icon: Layers,
       hasDropdown: true,
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
       subItems: [
         {
           label: 'Gerenciar Usuários',
@@ -109,7 +110,7 @@ export default function Sidebar({
       label: 'Cargos e Salários',
       icon: DollarSign,
       path: '/salary',
-      allowedRoles: ['director']
+      allowedRoles: ['director', 'master']
     },
     {
       label: 'Gerenciar PDI',
@@ -121,7 +122,7 @@ export default function Sidebar({
       label: 'Gerenciar Ciclos',
       icon: RotateCcw,
       path: '/cycle',
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
     },
     {
       label: 'Autoavaliação',
@@ -133,31 +134,43 @@ export default function Sidebar({
       label: 'Avaliação do Líder',
       icon: Users,
       path: '/leader-evaluation',
-      allowedRoles: ['leader', 'director'],
+      allowedRoles: ['leader', 'director', 'master'],
+    },
+    {
+      label: 'Gerenciar Avaliações',
+      icon: Settings,
+      path: '/evaluation-management',
+      allowedRoles: ['master', 'director'],
+    },
+    {
+      label: 'Upload em Lote',
+      icon: Upload,
+      path: '/bulk-evaluation-upload',
+      allowedRoles: ['master'],
     },
     {
       label: 'Consenso',
       icon: Handshake,
       path: '/consensus',
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
     },
     {
       label: 'Matriz 9 Box',
       icon: Grid3X3,
       path: '/nine-box',
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
     },
     {
       label: 'PDI',
       icon: FileText,
       path: '/action-plan',
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
     },
     {
       label: 'Relatórios',
       icon: PieChart,
       path: '/reports',
-      allowedRoles: ['director'],
+      allowedRoles: ['director', 'master'],
     },
     {
       label: 'Guia NineBox',

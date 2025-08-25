@@ -7,6 +7,7 @@ export interface User {
   position: string;
   is_leader: boolean;
   is_director: boolean;
+  is_master: boolean;
   active: boolean;
   phone?: string | null;
   birth_date?: string | null;
@@ -339,6 +340,7 @@ export interface UsersRow {
   position: string;
   is_leader: boolean;
   is_director: boolean;
+  is_master: boolean;
   phone: string | null;
   birth_date: string | null;
   join_date: string | null;
@@ -378,6 +380,7 @@ export interface UsersInsert {
   position: string;
   is_leader?: boolean;
   is_director?: boolean;
+  is_master?: boolean;
   phone?: string | null;
   birth_date?: string | null;
   join_date?: string | null;
@@ -416,6 +419,7 @@ export interface UsersUpdate {
   position?: string;
   is_leader?: boolean;
   is_director?: boolean;
+  is_master?: boolean;
   phone?: string | null;
   birth_date?: string | null;
   join_date?: string | null;
@@ -467,6 +471,7 @@ export interface CreateUserRequest {
   position: string;
   is_leader?: boolean;
   is_director?: boolean;
+  is_master?: boolean;
   phone?: string;
   birth_date?: string;
   join_date?: string;
@@ -497,6 +502,7 @@ export interface UpdateUserRequest {
   position?: string;
   is_leader?: boolean;
   is_director?: boolean;
+  is_master?: boolean;
   phone?: string;
   birth_date?: string;
   join_date?: string;
@@ -534,6 +540,7 @@ export interface UserFilters {
   active?: boolean;
   is_leader?: boolean;
   is_director?: boolean;
+  is_master?: boolean;
   reports_to?: string;
   department_id?: string;
   contract_type?: ContractType;
