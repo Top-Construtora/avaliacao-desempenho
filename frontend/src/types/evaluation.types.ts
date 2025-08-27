@@ -198,8 +198,8 @@ export const EVALUATION_COMPETENCIES = {
       category: 'technical' as const
     },
     {
-      name: 'Assertividade e Proatividade',
-      description: 'Comunicação assertiva e capacidade de prover soluções de forma proativa',
+      name: 'Aderência a Processos',
+      description: 'Trabalha em aderência aos processos de gestão da empresa, esforçando-se para compreender e atender os objetivos, cumprindo com os resutlados da área',
       category: 'technical' as const
     }
   ],
@@ -215,35 +215,35 @@ export const EVALUATION_COMPETENCIES = {
       category: 'behavioral' as const
     },
     {
-      name: 'Delegação',
-      description: 'Capacidade de distribuir tarefas adequadamente e empoderar a equipe',
+      name: 'Colaboração',
+      description: 'Possibilita entre o time uma troca de conhecimento e agilidade no cumprimento de metas e objetivos compartilhados, ou seja, trabalho em equipe',
       category: 'behavioral' as const
     },
     {
-      name: 'Patrimonialismo',
-      description: 'Cuidado e responsabilidade com os recursos e patrimônio da empresa',
+      name: 'Flexibilidade',
+      description: 'Capaz de se adaptar a mudanças e/ou situações inesperadas',
       category: 'behavioral' as const
     }
   ],
   deliveries: [
     {
-      name: 'Meritocracia e Missão Compartilhada',
-      description: 'Reconhecimento por mérito e alinhamento com os valores da empresa',
+      name: 'Missão dada é missão cumprida',
+      description: 'Aqui, o compromisso é sagrado. O que é combinado, é entregue. Cumpra o acordo dentro dos parâmetros estabelecidos e com excelência',
       category: 'deliveries' as const
     },
     {
-      name: 'Espiral de Passos',
-      description: 'Desenvolvimento contínuo e progressão estruturada na carreira',
+      name: 'Senso do Dono',
+      description: 'Cada colaborador cuida do negócio como se fosse seu. Tomamos decisões com responsabilidade, sempre pensando no melhor para a empresa',
       category: 'deliveries' as const
     },
     {
-      name: 'Cooperação',
-      description: 'Trabalho colaborativo e contribuição para o sucesso coletivo',
+      name: 'Planejar é preciso',
+      description: 'Sem planejamento, tudo vira urgência. Antecipamos os desafios para garantir que cada etapa seja cumprida no tempo certo, evitando o caos',
       category: 'deliveries' as const
     },
     {
-      name: 'Cliente em 1° Lugar',
-      description: 'Foco na satisfação e necessidades do cliente interno e externo',
+      name: 'Melhora Contínua',
+      description: 'Nunca estamos satisfeitos com o status quo. Buscamos constantemente melhorar, tanto no nível pessoal quanto organizacional, com uma postura inconformada que nos impulsiona a evoluir',
       category: 'deliveries' as const
     }
   ]
