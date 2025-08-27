@@ -134,7 +134,7 @@ const NineBoxGuide = () => {
     {
       id: '8',
       position: { row: 1, col: 2 },
-      title: 'Performance de Alto Impacto',
+      title: 'Alto Impacto',
       subtitle: 'Contribuição de valor',
       performance: 'alto',
       potential: 'médio',

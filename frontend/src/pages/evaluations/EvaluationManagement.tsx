@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { 
-  Users, BookOpen, User as UserIcon, Target, CheckCircle, XCircle, Clock, Search, Filter, Calendar, Save, Edit
+  Users, BookOpen, User as UserIcon, Target, CheckCircle, XCircle, Clock, Search, Filter, Calendar, Save, Edit, ChevronDown, AlertCircle
 } from 'lucide-react';
 import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +16,16 @@ import { EVALUATION_COMPETENCIES } from '../../types/evaluation.types';
 interface EvaluationWithUser extends Evaluation {
   employee?: User;
   evaluator?: User;
+}
+
+interface PdiItem {
+  id: string;
+  competencia: string;
+  calendarizacao: string;
+  comoDesenvolver: string;
+  resultadosEsperados: string;
+  status: '1' | '2' | '3' | '4' | '5'; // 1: Não iniciado, 2: Em andamento, 3: Pausado, 4: Cancelado, 5: Concluído
+  observacoes: string;
 }
 
 interface UserEvaluationData {
@@ -48,15 +58,26 @@ interface UserEvaluationData {
     technical: { [key: string]: number | null };
     behavioral: { [key: string]: number | null };
     deliveries: { [key: string]: number | null };
+    // Potencial (notas de 1-4)
+    potential: {
+      funcaoSubsequente: number | null;
+      aprendizadoContinuo: number | null;
+      alinhamentoCultural: number | null;
+      visaoSistemica: number | null;
+    };
     finalScore: number;
   };
+  // Consenso
+  consensus: {
+    technical: { [key: string]: number | null };
+    behavioral: { [key: string]: number | null };
+    deliveries: { [key: string]: number | null };
+    notes: string;
+  };
   pdi: {
-    shortTermGoals: string;
-    mediumTermGoals: string;
-    longTermGoals: string;
-    developmentActions: string;
-    resources: string;
-    timeline: string;
+    curtosPrazos: PdiItem[];
+    mediosPrazos: PdiItem[];
+    longosPrazos: PdiItem[];
   };
   // Status de salvamento individual
   isSaving: boolean;
@@ -75,6 +96,7 @@ const EvaluationManagement: React.FC = () => {
   const [statusFilter] = useState<string>('all');
   const [usersEvaluationData, setUsersEvaluationData] = useState<UserEvaluationData[]>([]);
   const [saving, setSaving] = useState(false);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   // Seções do Toolkit
   const toolkitSections = [
@@ -90,14 +112,6 @@ const EvaluationManagement: React.FC = () => {
     behavioral: EVALUATION_COMPETENCIES.behavioral,
     deliveries: EVALUATION_COMPETENCIES.deliveries
   };
-
-  // Debug: Log user data
-  console.log('EvaluationManagement - User data:', {
-    user,
-    is_master: user?.is_master,
-    is_director: user?.is_director,
-    hasPermission: user?.is_master || user?.is_director
-  });
 
   // Verifica se o usuário tem permissão (master ou director)
   const hasPermission = user?.is_master || user?.is_director;
@@ -166,15 +180,24 @@ const EvaluationManagement: React.FC = () => {
         technical: competencyCategories.technical.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
         behavioral: competencyCategories.behavioral.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
         deliveries: competencyCategories.deliveries.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
+        potential: {
+          funcaoSubsequente: null,
+          aprendizadoContinuo: null,
+          alinhamentoCultural: null,
+          visaoSistemica: null
+        },
         finalScore: 0
       },
+      consensus: {
+        technical: competencyCategories.technical.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
+        behavioral: competencyCategories.behavioral.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
+        deliveries: competencyCategories.deliveries.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
+        notes: ''
+      },
       pdi: {
-        shortTermGoals: '',
-        mediumTermGoals: '',
-        longTermGoals: '',
-        developmentActions: '',
-        resources: '',
-        timeline: ''
+        curtosPrazos: [],
+        mediosPrazos: [],
+        longosPrazos: []
       },
       isSaving: false,
       lastSaved: undefined,
@@ -243,6 +266,72 @@ const EvaluationManagement: React.FC = () => {
           saveError: undefined
         };
         return updated;
+      }
+      return userData;
+    }));
+  };
+
+  // Função para atualizar potencial
+  const updatePotentialScore = (
+    userId: string,
+    potentialField: 'funcaoSubsequente' | 'aprendizadoContinuo' | 'alinhamentoCultural' | 'visaoSistemica',
+    score: number | null
+  ) => {
+    setUsersEvaluationData(prev => prev.map(userData => {
+      if (userData.user.id === userId) {
+        return {
+          ...userData,
+          leaderEvaluation: {
+            ...userData.leaderEvaluation,
+            potential: {
+              ...userData.leaderEvaluation.potential,
+              [potentialField]: score
+            }
+          },
+          saveError: undefined
+        };
+      }
+      return userData;
+    }));
+  };
+
+  // Função para atualizar consenso
+  const updateConsensusScore = (
+    userId: string,
+    category: 'technical' | 'behavioral' | 'deliveries',
+    competencyName: string,
+    score: number | null
+  ) => {
+    setUsersEvaluationData(prev => prev.map(userData => {
+      if (userData.user.id === userId) {
+        return {
+          ...userData,
+          consensus: {
+            ...userData.consensus,
+            [category]: {
+              ...userData.consensus[category],
+              [competencyName]: score
+            }
+          },
+          saveError: undefined
+        };
+      }
+      return userData;
+    }));
+  };
+
+  // Função para atualizar notas do consenso
+  const updateConsensusNotes = (userId: string, notes: string) => {
+    setUsersEvaluationData(prev => prev.map(userData => {
+      if (userData.user.id === userId) {
+        return {
+          ...userData,
+          consensus: {
+            ...userData.consensus,
+            notes
+          },
+          saveError: undefined
+        };
       }
       return userData;
     }));
@@ -335,6 +424,7 @@ const EvaluationManagement: React.FC = () => {
           userId: userData.user.id,
           selfEvaluation: userData.selfEvaluation,
           leaderEvaluation: userData.leaderEvaluation,
+          consensus: userData.consensus,
           toolkit: userData.toolkit,
           pdi: userData.pdi
         }]
@@ -364,14 +454,25 @@ const EvaluationManagement: React.FC = () => {
     }
   };
 
-  const updateUserPDI = (userId: string, field: keyof UserEvaluationData['pdi'], value: string) => {
+  // Função para adicionar item ao PDI
+  const addPdiItem = (userId: string, prazo: 'curtosPrazos' | 'mediosPrazos' | 'longosPrazos') => {
+    const newItem: PdiItem = {
+      id: Date.now().toString(),
+      competencia: '',
+      calendarizacao: '',
+      comoDesenvolver: '',
+      resultadosEsperados: '',
+      status: '1',
+      observacoes: ''
+    };
+
     setUsersEvaluationData(prev => prev.map(userData => 
       userData.user.id === userId 
         ? {
             ...userData,
             pdi: {
               ...userData.pdi,
-              [field]: value
+              [prazo]: [...userData.pdi[prazo], newItem]
             },
             saveError: undefined
           }
@@ -379,24 +480,94 @@ const EvaluationManagement: React.FC = () => {
     ));
   };
 
+  // Função para remover item do PDI
+  const removePdiItem = (userId: string, prazo: 'curtosPrazos' | 'mediosPrazos' | 'longosPrazos', itemId: string) => {
+    setUsersEvaluationData(prev => prev.map(userData => 
+      userData.user.id === userId 
+        ? {
+            ...userData,
+            pdi: {
+              ...userData.pdi,
+              [prazo]: userData.pdi[prazo].filter(item => item.id !== itemId)
+            },
+            saveError: undefined
+          }
+        : userData
+    ));
+  };
+
+  // Função para atualizar item do PDI
+  const updatePdiItem = (
+    userId: string, 
+    prazo: 'curtosPrazos' | 'mediosPrazos' | 'longosPrazos', 
+    itemId: string, 
+    field: keyof PdiItem, 
+    value: string
+  ) => {
+    setUsersEvaluationData(prev => prev.map(userData => 
+      userData.user.id === userId 
+        ? {
+            ...userData,
+            pdi: {
+              ...userData.pdi,
+              [prazo]: userData.pdi[prazo].map(item => 
+                item.id === itemId 
+                  ? { ...item, [field]: value }
+                  : item
+              )
+            },
+            saveError: undefined
+          }
+        : userData
+    ));
+  };
+
+  // Função para toggle do card
+  const toggleCardExpansion = (userId: string) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
   const calculateEvaluationAverages = (evaluation: { 
     technical: { [key: string]: number | null };
     behavioral: { [key: string]: number | null };
     deliveries: { [key: string]: number | null };
   }) => {
-    const categories = ['technical', 'behavioral', 'deliveries'] as const;
-    const categoryScores: number[] = [];
+    // Definir os pesos para cada categoria
+    const weights = {
+      technical: 0.5,    // 50%
+      behavioral: 0.3,   // 30%
+      deliveries: 0.2    // 20% (organizacionais)
+    };
     
+    const categories = ['technical', 'behavioral', 'deliveries'] as const;
+    const categoryAverages: { [key: string]: number } = {};
+    let totalWeight = 0;
+    let weightedSum = 0;
+    
+    // Calcular a média de cada categoria
     categories.forEach(category => {
       const scores = Object.values(evaluation[category]).filter(score => score !== null) as number[];
       if (scores.length > 0) {
         const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-        categoryScores.push(average);
+        categoryAverages[category] = average;
+        
+        // Adicionar ao cálculo ponderado
+        weightedSum += average * weights[category];
+        totalWeight += weights[category];
       }
     });
     
-    return categoryScores.length > 0 
-      ? categoryScores.reduce((sum, score) => sum + score, 0) / categoryScores.length 
+    // Retornar a média ponderada com até 3 casas decimais
+    return totalWeight > 0 
+      ? Number((weightedSum / totalWeight).toFixed(3))
       : 0;
   };
 
@@ -425,11 +596,11 @@ const EvaluationManagement: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-primary-500" />;
       case 'in-progress':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="w-4 h-4 text-accent-600" />;
       default:
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="w-4 h-4 text-secondary-500" />;
     }
   };
 
@@ -495,7 +666,7 @@ const EvaluationManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <XCircle className="w-16 h-16 text-secondary-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
             Acesso Negado
           </h2>
@@ -515,14 +686,14 @@ const EvaluationManagement: React.FC = () => {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 text-white">
+      <div className="bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-700 dark:to-secondary-700 rounded-xl shadow-primary-500/20 dark:shadow-secondary-600/30 p-8 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center">
               <Users className="w-8 h-8 mr-3" />
               Gerenciamento de Avaliações
             </h1>
-            <p className="text-blue-100 mt-2 text-lg">
+            <p className="text-primary-100 dark:text-secondary-100 mt-2 text-lg">
               Gerencie autoavaliações, avaliações do líder e PDIs de forma eficiente
             </p>
           </div>
@@ -535,7 +706,7 @@ const EvaluationManagement: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Seleção de Ciclo
           </h2>
-          <Calendar className="w-5 h-5 text-blue-500" />
+          <Calendar className="w-5 h-5 text-primary-500" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -545,7 +716,7 @@ const EvaluationManagement: React.FC = () => {
             <select
               value={selectedCycle}
               onChange={(e) => setSelectedCycle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">Selecione um ciclo...</option>
               {cycles.map((cycle) => (
@@ -599,10 +770,10 @@ const EvaluationManagement: React.FC = () => {
                 disabled={tab.disabled}
                 className={`${
                   activeTab === tab.id && !tab.disabled
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                     : tab.disabled
                     ? 'border-transparent text-gray-400 cursor-not-allowed'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -623,7 +794,7 @@ const EvaluationManagement: React.FC = () => {
                 placeholder="Buscar colaboradores..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
             {activeTab !== 'overview' && (
@@ -632,7 +803,7 @@ const EvaluationManagement: React.FC = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 appearance-none"
+                  className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 appearance-none"
                 >
                   <option value="all">Todos os Status</option>
                   <option value="pending">Pendente</option>
@@ -678,23 +849,130 @@ const EvaluationManagement: React.FC = () => {
               </div>
 
               {/* Evaluation Form */}
-              <div className="space-y-8">
-                {usersEvaluationData.map((userData) => (
-                  <UserEvaluationCard
-                    key={userData.user.id}
-                    userData={userData}
-                    toolkitSections={toolkitSections}
-                    competencyCategories={competencyCategories}
-                    onUpdateToolkitData={updateToolkitData}
-                    onAddToolkitItem={addToolkitItem}
-                    onRemoveToolkitItem={removeToolkitItem}
-                    onUpdateSelfEvaluationScore={updateSelfEvaluationScore}
-                    onUpdateLeaderEvaluationScore={updateLeaderEvaluationScore}
-                    onUpdateUserPDI={updateUserPDI}
-                    onSaveIndividual={handleSaveIndividual}
-                    selectedCycle={selectedCycle}
-                  />
-                ))}
+              <div className="space-y-4">
+                {usersEvaluationData.map((userData) => {
+                  const isExpanded = expandedCards.has(userData.user.id);
+                  const hasAnyData = (
+                    Object.values(userData.selfEvaluation.competencies.technical).some(v => v !== null) ||
+                    Object.values(userData.selfEvaluation.competencies.behavioral).some(v => v !== null) ||
+                    Object.values(userData.selfEvaluation.competencies.deliveries).some(v => v !== null) ||
+                    Object.values(userData.leaderEvaluation.technical).some(v => v !== null) ||
+                    Object.values(userData.leaderEvaluation.behavioral).some(v => v !== null) ||
+                    Object.values(userData.leaderEvaluation.deliveries).some(v => v !== null) ||
+                    userData.pdi.curtosPrazos.length > 0 || userData.pdi.mediosPrazos.length > 0 || userData.pdi.longosPrazos.length > 0
+                  );
+                  
+                  const hasSelfEval = Object.values(userData.selfEvaluation.competencies.technical).some(v => v !== null) ||
+                    Object.values(userData.selfEvaluation.competencies.behavioral).some(v => v !== null) ||
+                    Object.values(userData.selfEvaluation.competencies.deliveries).some(v => v !== null);
+                  
+                  const hasLeaderEval = Object.values(userData.leaderEvaluation.technical).some(v => v !== null) ||
+                    Object.values(userData.leaderEvaluation.behavioral).some(v => v !== null) ||
+                    Object.values(userData.leaderEvaluation.deliveries).some(v => v !== null);
+                  
+                  const hasPDI = userData.pdi.curtosPrazos.length > 0 || userData.pdi.mediosPrazos.length > 0 || userData.pdi.longosPrazos.length > 0;
+                  
+                  return (
+                    <motion.div
+                      key={userData.user.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    >
+                      {/* Card Header */}
+                      <div 
+                        className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                        onClick={() => toggleCardExpansion(userData.user.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold shadow-sm">
+                              {userData.user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                                {userData.user.name}
+                              </h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {userData.user.position}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            {/* Status Indicators */}
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-2 h-2 rounded-full ${
+                                hasSelfEval ? 'bg-primary-500' : 'bg-gray-300'
+                              }`} title="Autoavaliação" />
+                              <div className={`w-2 h-2 rounded-full ${
+                                hasLeaderEval ? 'bg-secondary-500' : 'bg-gray-300'
+                              }`} title="Avaliação Líder" />
+                              <div className={`w-2 h-2 rounded-full ${
+                                hasPDI ? 'bg-accent-600' : 'bg-gray-300'
+                              }`} title="PDI" />
+                            </div>
+                            
+                            {userData.isSaving && (
+                              <div className="w-4 h-4 border-2 border-accent-600 border-t-transparent rounded-full animate-spin" />
+                            )}
+                            
+                            {userData.lastSaved && !userData.isSaving && (
+                              <CheckCircle className="w-4 h-4 text-primary-500" title="Salvo" />
+                            )}
+                            
+                            <motion.div
+                              animate={{ rotate: isExpanded ? 180 : 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            </motion.div>
+                          </div>
+                        </div>
+                        
+                        {userData.saveError && (
+                          <div className="mt-2 p-2 bg-secondary-50 dark:bg-secondary-900/20 rounded text-sm text-secondary-600 dark:text-secondary-400">
+                            {userData.saveError}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Expandable Content */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: "auto" }}
+                            exit={{ height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="border-t border-gray-200 dark:border-gray-700 overflow-hidden"
+                          >
+                            <div className="p-4">
+                              <UserEvaluationCard
+                                userData={userData}
+                                toolkitSections={toolkitSections}
+                                competencyCategories={competencyCategories}
+                                onUpdateToolkitData={updateToolkitData}
+                                onAddToolkitItem={addToolkitItem}
+                                onRemoveToolkitItem={removeToolkitItem}
+                                onUpdateSelfEvaluationScore={updateSelfEvaluationScore}
+                                onUpdateLeaderEvaluationScore={updateLeaderEvaluationScore}
+                                onUpdatePotentialScore={updatePotentialScore}
+                                onUpdateConsensusScore={updateConsensusScore}
+                                onUpdateConsensusNotes={updateConsensusNotes}
+                                onAddPdiItem={addPdiItem}
+                                onRemovePdiItem={removePdiItem}
+                                onUpdatePdiItem={updatePdiItem}
+                                onSaveIndividual={handleSaveIndividual}
+                                selectedCycle={selectedCycle}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -703,40 +981,40 @@ const EvaluationManagement: React.FC = () => {
           {activeTab === 'overview' && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <div className="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-lg">
                   <div className="flex items-center">
-                    <UserIcon className="w-8 h-8 text-blue-500" />
+                    <UserIcon className="w-8 h-8 text-primary-500" />
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                      <p className="text-sm font-medium text-primary-700 dark:text-primary-400">
                         Autoavaliações
                       </p>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      <p className="text-2xl font-bold text-primary-900 dark:text-primary-100">
                         {evaluations.filter(e => e.type === 'self').length}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                <div className="bg-secondary-50 dark:bg-secondary-900/20 p-4 rounded-lg">
                   <div className="flex items-center">
-                    <Users className="w-8 h-8 text-green-500" />
+                    <Users className="w-8 h-8 text-secondary-500" />
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                      <p className="text-sm font-medium text-secondary-700 dark:text-secondary-400">
                         Avaliações do Líder
                       </p>
-                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                      <p className="text-2xl font-bold text-secondary-900 dark:text-secondary-100">
                         {evaluations.filter(e => e.type === 'leader').length}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                <div className="bg-accent-50 dark:bg-accent-900/20 p-4 rounded-lg">
                   <div className="flex items-center">
-                    <Target className="w-8 h-8 text-purple-500" />
+                    <Target className="w-8 h-8 text-accent-600" />
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-purple-700 dark:text-purple-400">
+                      <p className="text-sm font-medium text-accent-700 dark:text-accent-400">
                         PDIs
                       </p>
-                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                      <p className="text-2xl font-bold text-accent-900 dark:text-accent-100">
                         {/* TODO: Contar PDIs */}
                         0
                       </p>
@@ -751,7 +1029,7 @@ const EvaluationManagement: React.FC = () => {
                   <div key={user.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-full flex items-center justify-center text-white font-semibold shadow-primary-500/20">
                           {user.name.charAt(0)}
                         </div>
                         <div>

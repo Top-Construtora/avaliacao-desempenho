@@ -44,6 +44,13 @@ interface UserEvaluationData {
     technical: { [key: string]: number | null };
     behavioral: { [key: string]: number | null };
     deliveries: { [key: string]: number | null };
+    // Potencial (notas de 1-4)
+    potential: {
+      funcaoSubsequente: number | null;
+      aprendizadoContinuo: number | null;
+      alinhamentoCultural: number | null;
+      visaoSistemica: number | null;
+    };
   };
   // PDI (Plano de Desenvolvimento Individual)
   pdi: {
@@ -143,6 +150,12 @@ const BulkEvaluationUpload: React.FC = () => {
         technical: competencyCategories.technical.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
         behavioral: competencyCategories.behavioral.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
         deliveries: competencyCategories.deliveries.reduce((acc, comp) => ({ ...acc, [comp.name]: null }), {}),
+        potential: {
+          funcaoSubsequente: null,
+          aprendizadoContinuo: null,
+          alinhamentoCultural: null,
+          visaoSistemica: null,
+        },
       },
       pdi: {
         shortTermGoals: '',
@@ -230,6 +243,11 @@ const BulkEvaluationUpload: React.FC = () => {
       errors.push('Notas da avaliação do líder devem estar entre 1 e 4');
     }
     
+    // Validar potencial (1-4)
+    const potentialScores = Object.values(userData.leaderEvaluation.potential);
+    if (potentialScores.some(score => score !== null && (score < 1 || score > 4))) {
+      errors.push('Notas de potencial devem estar entre 1 e 4');
+    }
     
     // Verificar completude (pelo menos uma seção preenchida)
     const hasToolkit = ['conhecimentos', 'ferramentas', 'forcasInternas', 'qualidades'].some(key => 
@@ -237,9 +255,10 @@ const BulkEvaluationUpload: React.FC = () => {
     );
     const hasSelfCompetencies = selfCompetencyScores.some(score => score !== null);
     const hasLeaderEvaluation = leaderScores.some(score => score !== null);
+    const hasPotential = potentialScores.some(score => score !== null);
     const hasPDI = Object.values(userData.pdi).some(value => value.trim() !== '');
     
-    const isComplete = hasToolkit || hasSelfCompetencies || hasLeaderEvaluation || hasPDI;
+    const isComplete = hasToolkit || hasSelfCompetencies || hasLeaderEvaluation || hasPotential || hasPDI;
     
     return {
       isComplete,

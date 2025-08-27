@@ -205,20 +205,71 @@ export interface Database {
           created_at?: string
         }
       }
-      evaluations: {
+      self_evaluations: {
         Row: {
           id: string
           employee_id: string
-          evaluator_id: string
-          type: 'self' | 'leader' | 'potential'
+          cycle_id: string
           status: 'pending' | 'in-progress' | 'completed'
           technical_score: number | null
           behavioral_score: number | null
           deliveries_score: number | null
           final_score: number | null
-          strengths: string | null
-          improvements: string | null
-          observations: string | null
+          evaluation_date: string
+          created_at: string
+          updated_at: string
+          knowledge: string[] | null
+          tools: string[] | null
+          strengths_internal: string[] | null
+          qualities: string[] | null
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          cycle_id: string
+          status?: 'pending' | 'in-progress' | 'completed'
+          technical_score?: number | null
+          behavioral_score?: number | null
+          deliveries_score?: number | null
+          final_score?: number | null
+          evaluation_date?: string
+          created_at?: string
+          updated_at?: string
+          knowledge?: string[] | null
+          tools?: string[] | null
+          strengths_internal?: string[] | null
+          qualities?: string[] | null
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          cycle_id?: string
+          status?: 'pending' | 'in-progress' | 'completed'
+          technical_score?: number | null
+          behavioral_score?: number | null
+          deliveries_score?: number | null
+          final_score?: number | null
+          evaluation_date?: string
+          created_at?: string
+          updated_at?: string
+          knowledge?: string[] | null
+          tools?: string[] | null
+          strengths_internal?: string[] | null
+          qualities?: string[] | null
+        }
+      }
+      leader_evaluations: {
+        Row: {
+          id: string
+          employee_id: string
+          evaluator_id: string
+          cycle_id: string
+          status: 'pending' | 'in-progress' | 'completed'
+          technical_score: number | null
+          behavioral_score: number | null
+          deliveries_score: number | null
+          final_score: number | null
+          potential_score: number | null
           evaluation_date: string
           created_at: string
           updated_at: string
@@ -227,15 +278,13 @@ export interface Database {
           id?: string
           employee_id: string
           evaluator_id: string
-          type: 'self' | 'leader' | 'potential'
+          cycle_id: string
           status?: 'pending' | 'in-progress' | 'completed'
           technical_score?: number | null
           behavioral_score?: number | null
           deliveries_score?: number | null
           final_score?: number | null
-          strengths?: string | null
-          improvements?: string | null
-          observations?: string | null
+          potential_score?: number | null
           evaluation_date?: string
           created_at?: string
           updated_at?: string
@@ -244,47 +293,148 @@ export interface Database {
           id?: string
           employee_id?: string
           evaluator_id?: string
-          type?: 'self' | 'leader' | 'potential'
+          cycle_id?: string
           status?: 'pending' | 'in-progress' | 'completed'
           technical_score?: number | null
           behavioral_score?: number | null
           deliveries_score?: number | null
           final_score?: number | null
-          strengths?: string | null
-          improvements?: string | null
-          observations?: string | null
+          potential_score?: number | null
           evaluation_date?: string
           created_at?: string
           updated_at?: string
         }
       }
-      evaluation_criteria: {
+      evaluation_competencies: {
         Row: {
           id: string
-          evaluation_id: string
+          evaluation_id: string | null
           criterion_name: string
-          criterion_description: string
+          criterion_description: string | null
           category: 'technical' | 'behavioral' | 'deliveries'
           score: number | null
           created_at: string
+          written_response: string | null
+          weight: number | null
+          self_evaluation_id: string | null
+          leader_evaluation_id: string | null
         }
         Insert: {
           id?: string
-          evaluation_id: string
+          evaluation_id?: string | null
           criterion_name: string
-          criterion_description: string
+          criterion_description?: string | null
           category: 'technical' | 'behavioral' | 'deliveries'
           score?: number | null
           created_at?: string
+          written_response?: string | null
+          weight?: number | null
+          self_evaluation_id?: string | null
+          leader_evaluation_id?: string | null
         }
         Update: {
           id?: string
-          evaluation_id?: string
+          evaluation_id?: string | null
           criterion_name?: string
-          criterion_description?: string
+          criterion_description?: string | null
           category?: 'technical' | 'behavioral' | 'deliveries'
           score?: number | null
           created_at?: string
+          written_response?: string | null
+          weight?: number | null
+          self_evaluation_id?: string | null
+          leader_evaluation_id?: string | null
+        }
+      }
+      development_plans: {
+        Row: {
+          id: string
+          employee_id: string
+          consensus_evaluation_id: string | null
+          goals: string[]
+          actions: string[]
+          resources: string[]
+          timeline: string | null
+          status: 'draft' | 'active' | 'completed' | 'cancelled'
+          created_at: string
+          updated_at: string
+          cycle_id: string | null
+          leader_evaluation_id: string | null
+          items: any | null
+          periodo: string | null
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          consensus_evaluation_id?: string | null
+          goals?: string[]
+          actions?: string[]
+          resources?: string[]
+          timeline?: string | null
+          status?: 'draft' | 'active' | 'completed' | 'cancelled'
+          created_at?: string
+          updated_at?: string
+          cycle_id?: string | null
+          leader_evaluation_id?: string | null
+          items?: any | null
+          periodo?: string | null
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          consensus_evaluation_id?: string | null
+          goals?: string[]
+          actions?: string[]
+          resources?: string[]
+          timeline?: string | null
+          status?: 'draft' | 'active' | 'completed' | 'cancelled'
+          created_at?: string
+          updated_at?: string
+          cycle_id?: string | null
+          leader_evaluation_id?: string | null
+          items?: any | null
+          periodo?: string | null
+          created_by?: string | null
+        }
+      }
+      evaluation_cycles: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          start_date: string
+          end_date: string
+          status: 'draft' | 'active' | 'open' | 'closed'
+          is_editable: boolean
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          start_date: string
+          end_date: string
+          status?: 'draft' | 'active' | 'open' | 'closed'
+          is_editable?: boolean
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          start_date?: string
+          end_date?: string
+          status?: 'draft' | 'active' | 'open' | 'closed'
+          is_editable?: boolean
+          created_by?: string
+          created_at?: string
+          updated_at?: string
         }
       }
     }
@@ -338,12 +488,25 @@ export type TeamUpdate = Database['public']['Tables']['teams']['Update']
 export type TeamMember = Database['public']['Tables']['team_members']['Row']
 export type TeamMemberInsert = Database['public']['Tables']['team_members']['Insert']
 
-export type Evaluation = Database['public']['Tables']['evaluations']['Row']
-export type EvaluationInsert = Database['public']['Tables']['evaluations']['Insert']
-export type EvaluationUpdate = Database['public']['Tables']['evaluations']['Update']
+export type SelfEvaluation = Database['public']['Tables']['self_evaluations']['Row']
+export type SelfEvaluationInsert = Database['public']['Tables']['self_evaluations']['Insert']
+export type SelfEvaluationUpdate = Database['public']['Tables']['self_evaluations']['Update']
 
-export type EvaluationCriterion = Database['public']['Tables']['evaluation_criteria']['Row']
-export type EvaluationCriterionInsert = Database['public']['Tables']['evaluation_criteria']['Insert']
+export type LeaderEvaluation = Database['public']['Tables']['leader_evaluations']['Row']
+export type LeaderEvaluationInsert = Database['public']['Tables']['leader_evaluations']['Insert']
+export type LeaderEvaluationUpdate = Database['public']['Tables']['leader_evaluations']['Update']
+
+export type EvaluationCompetency = Database['public']['Tables']['evaluation_competencies']['Row']
+export type EvaluationCompetencyInsert = Database['public']['Tables']['evaluation_competencies']['Insert']
+export type EvaluationCompetencyUpdate = Database['public']['Tables']['evaluation_competencies']['Update']
+
+export type DevelopmentPlan = Database['public']['Tables']['development_plans']['Row']
+export type DevelopmentPlanInsert = Database['public']['Tables']['development_plans']['Insert']
+export type DevelopmentPlanUpdate = Database['public']['Tables']['development_plans']['Update']
+
+export type EvaluationCycle = Database['public']['Tables']['evaluation_cycles']['Row']
+export type EvaluationCycleInsert = Database['public']['Tables']['evaluation_cycles']['Insert']
+export type EvaluationCycleUpdate = Database['public']['Tables']['evaluation_cycles']['Update']
 
 // Tipos compostos (com joins)
 export interface UserWithDetails extends SupabaseUser {
@@ -365,8 +528,18 @@ export interface DepartmentWithDetails extends Department {
   member_count?: number
 }
 
-export interface EvaluationWithDetails extends Evaluation {
+export interface SelfEvaluationWithDetails extends SelfEvaluation {
+  employee?: Pick<User, 'id' | 'name' | 'email' | 'position'>
+  competencies?: EvaluationCompetency[]
+}
+
+export interface LeaderEvaluationWithDetails extends LeaderEvaluation {
   employee?: Pick<User, 'id' | 'name' | 'email' | 'position'>
   evaluator?: Pick<User, 'id' | 'name' | 'email'>
-  criteria?: EvaluationCriterion[]
+  competencies?: EvaluationCompetency[]
+}
+
+export interface DevelopmentPlanWithDetails extends DevelopmentPlan {
+  employee?: Pick<User, 'id' | 'name' | 'email' | 'position'>
+  created_by_user?: Pick<User, 'id' | 'name' | 'email'>
 }

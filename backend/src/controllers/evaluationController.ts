@@ -509,5 +509,42 @@ export const evaluationController = {
       console.error('Controller error:', error);
       next(error);
     }
+  },
+
+  // Salvar avaliações em lote do Management
+  async bulkManagementSave(req: Request, res: Response, next: NextFunction) {
+    try {
+      const authReq = req as AuthRequest;
+      const { cycleId, evaluations } = req.body;
+
+      if (!cycleId || !evaluations || !Array.isArray(evaluations)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Parâmetros inválidos. cycleId e evaluations são obrigatórios.'
+        });
+      }
+
+      if (!authReq.user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Usuário não autenticado'
+        });
+      }
+
+      const result = await evaluationService.bulkManagementSave(
+        authReq.supabase,
+        cycleId,
+        evaluations,
+        authReq.user.id
+      );
+
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      console.error('Controller error:', error);
+      next(error);
+    }
   }
 };

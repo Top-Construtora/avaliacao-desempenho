@@ -57,4 +57,9 @@ router.put('/pdi/:pdiId', evaluationController.updatePDI);
 router.post('/bulk-upload', authorizeRoles(['master']) as any, evaluationController.bulkUploadEvaluations);
 router.post('/bulk-validate', authorizeRoles(['master']) as any, evaluationController.bulkValidateEvaluations);
 
+// ====================================
+// ROTAS DE GERENCIAMENTO EM LOTE (DIRECTORS ONLY)
+// ====================================
+router.post('/bulk-management-save', authorizeRoles(['director', 'master']) as any, evaluationController.bulkManagementSave);
+
 export default router;

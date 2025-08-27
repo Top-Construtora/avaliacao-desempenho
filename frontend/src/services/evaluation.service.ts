@@ -354,23 +354,71 @@ export const evaluationService = {
     evaluations: Array<{
       userId: string;
       selfEvaluation: {
-        technical: { [key: string]: number };
-        behavioral: { [key: string]: number };
-        deliveries: { [key: string]: number };
+        toolkit: {
+          conhecimentos: string[];
+          ferramentas: string[];
+          forcasInternas: string[];
+          qualidades: string[];
+        };
+        competencies: {
+          technical: { [key: string]: number | null };
+          behavioral: { [key: string]: number | null };
+          deliveries: { [key: string]: number | null };
+        };
         finalScore: number;
       };
       leaderEvaluation: {
-        technical: { [key: string]: number };
-        behavioral: { [key: string]: number };
-        deliveries: { [key: string]: number };
-        potential: number;
+        technical: { [key: string]: number | null };
+        behavioral: { [key: string]: number | null };
+        deliveries: { [key: string]: number | null };
+        potential: {
+          funcaoSubsequente: number | null;
+          aprendizadoContinuo: number | null;
+          alinhamentoCultural: number | null;
+          visaoSistemica: number | null;
+        };
         finalScore: number;
       };
-      toolkit: { [key: string]: number };
+      toolkit: {
+        conhecimentos: number;
+        ferramentas: number;
+        forcasInternas: number;
+        qualidades: number;
+      };
       pdi: {
-        shortTerm: string;
-        mediumTerm: string;
-        longTerm: string;
+        curtosPrazos: Array<{
+          id: string;
+          competencia: string;
+          calendarizacao: string;
+          comoDesenvolver: string;
+          resultadosEsperados: string;
+          status: '1' | '2' | '3' | '4' | '5';
+          observacoes: string;
+        }>;
+        mediosPrazos: Array<{
+          id: string;
+          competencia: string;
+          calendarizacao: string;
+          comoDesenvolver: string;
+          resultadosEsperados: string;
+          status: '1' | '2' | '3' | '4' | '5';
+          observacoes: string;
+        }>;
+        longosPrazos: Array<{
+          id: string;
+          competencia: string;
+          calendarizacao: string;
+          comoDesenvolver: string;
+          resultadosEsperados: string;
+          status: '1' | '2' | '3' | '4' | '5';
+          observacoes: string;
+        }>;
+      };
+      consensus?: {
+        technical: { [key: string]: number | null };
+        behavioral: { [key: string]: number | null };
+        deliveries: { [key: string]: number | null };
+        notes: string;
       };
     }>;
   }): Promise<void> {
