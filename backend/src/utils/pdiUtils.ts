@@ -27,15 +27,30 @@ export class PDIUtils {
   
   // Validar estrutura de um item PDI
   static validatePDIItem(item: any): boolean {
-    return !!(
+    const isValid = !!(
       item.competencia && 
       item.comoDesenvolver && 
       item.resultadosEsperados && 
       item.prazo && 
       ['curto', 'medio', 'longo'].includes(item.prazo) &&
       item.status && 
-      ['1', '2', '3'].includes(item.status)
+      ['1', '2', '3', '4', '5'].includes(item.status) // Corrigir para aceitar todos os status
     );
+    
+    if (!isValid) {
+      console.log('❌ Item PDI inválido:', {
+        competencia: !!item.competencia,
+        comoDesenvolver: !!item.comoDesenvolver,
+        resultadosEsperados: !!item.resultadosEsperados,
+        prazo: item.prazo,
+        prazoValido: ['curto', 'medio', 'longo'].includes(item.prazo),
+        status: item.status,
+        statusValido: ['1', '2', '3', '4', '5'].includes(item.status)
+      });
+      console.log('Item completo:', item);
+    }
+    
+    return isValid;
   }
 
   // Processar dados do PDI vindos do frontend
@@ -90,7 +105,10 @@ export class PDIUtils {
       })));
     }
 
-    return allItems.filter(item => this.validatePDIItem(item));
+    console.log(`📋 Total de itens antes da validação: ${allItems.length}`);
+    const validItems = allItems.filter(item => this.validatePDIItem(item));
+    console.log(`✅ Itens válidos após validação: ${validItems.length}`);
+    return validItems;
   }
 
   // Organizar items por prazo para o frontend

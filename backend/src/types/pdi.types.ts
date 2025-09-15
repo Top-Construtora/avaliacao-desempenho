@@ -5,7 +5,7 @@ export interface PDIItem {
     comoDesenvolver: string;
     calendarizacao: string;
     status: '1' | '2' | '3' | '4' | '5'; // 1: Não iniciado, 2: Em andamento, 3: Pausado, 4: Concluído, 5: Cancelado
-    observacao?: string;
+    observacoes?: string;
     prazo: 'curto' | 'medio' | 'longo';
   }
   

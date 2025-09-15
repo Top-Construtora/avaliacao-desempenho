@@ -4,6 +4,7 @@ import userRoutes from './userRoutes';
 import departmentRoutes from './departmentRoutes';
 import evaluationRoutes from './evaluationRoutes';
 import salaryRoutes from './salaryRoutes';
+import pdiRoutes from './pdiRoutes';
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.use('/users', userRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/evaluations', evaluationRoutes);
 router.use('/salary', salaryRoutes);
+router.use('/pdi', pdiRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

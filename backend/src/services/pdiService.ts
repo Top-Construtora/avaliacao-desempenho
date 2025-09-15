@@ -6,6 +6,10 @@ export const pdiService = {
   // Salvar ou atualizar PDI
   async savePDI(supabase: SupabaseClient, pdiData: PDIData) {
     try {
+      console.log('🔄 Backend - Salvando PDI:', pdiData);
+      console.log('📊 Backend - Total de itens recebidos:', pdiData.items?.length || 0);
+      console.log('📋 Backend - Items detalhados:', pdiData.items);
+
       // Validar que há pelo menos um item
       if (!pdiData.items || pdiData.items.length === 0) {
         throw new ApiError(400, 'O PDI deve conter pelo menos um item');
@@ -79,11 +83,7 @@ export const pdiService = {
         .from('development_plans')
         .select(`
           *,
-          employee:users!employee_id(id, name, position),
-          leader_evaluation:leader_evaluations!leader_evaluation_id(
-            id,
-            evaluator:users!evaluator_id(id, name)
-          )
+          employee:users!employee_id(id, name, position)
         `)
         .eq('employee_id', employeeId)
         .eq('status', 'active')
@@ -109,7 +109,7 @@ export const pdiService = {
         .from('development_plans')
         .select(`
           *,
-          employee:users!employee_id(id, name, position, department)
+          employee:users!employee_id(id, name, position)
         `)
         .eq('cycle_id', cycleId)
         .eq('status', 'active')
@@ -125,15 +125,43 @@ export const pdiService = {
 
   // Validar estrutura do PDI
   validatePDIItems(items: PDIItem[]): boolean {
-    if (!items || items.length === 0) return false;
+    if (!items || items.length === 0) {
+      console.log('❌ Validação falhou: Nenhum item fornecido');
+      return false;
+    }
 
-    return items.every(item => 
-      item.competencia && 
-      item.resultadosEsperados && 
-      item.comoDesenvolver && 
-      item.calendarizacao &&
-      item.status &&
-      ['curto', 'medio', 'longo'].includes(item.prazo)
-    );
+    console.log('🔍 Validando', items.length, 'itens do PDI...');
+
+    const isValid = items.every((item, index) => {
+      const valid = 
+        item.competencia && 
+        item.resultadosEsperados && 
+        item.comoDesenvolver && 
+        item.calendarizacao &&
+        item.status &&
+        ['1', '2', '3', '4', '5'].includes(item.status) &&
+        ['curto', 'medio', 'longo'].includes(item.prazo);
+
+      if (!valid) {
+        console.log(`❌ Item ${index} inválido:`, {
+          competencia: !!item.competencia,
+          resultadosEsperados: !!item.resultadosEsperados,
+          comoDesenvolver: !!item.comoDesenvolver,
+          calendarizacao: !!item.calendarizacao,
+          status: item.status,
+          statusValido: ['1', '2', '3', '4', '5'].includes(item.status),
+          prazo: item.prazo,
+          prazoValido: ['curto', 'medio', 'longo'].includes(item.prazo)
+        });
+        console.log('Item completo:', item);
+      } else {
+        console.log(`✅ Item ${index} válido (${item.prazo}):`, item.competencia);
+      }
+
+      return valid;
+    });
+
+    console.log(isValid ? '✅ Validação concluída com sucesso' : '❌ Validação falhou');
+    return isValid;
   }
 };

@@ -5,6 +5,7 @@ import { Users, BookOpen, Info, Save, Send } from 'lucide-react';
 import Button from '../../components/Button';
 import PotentialAndPDI from '../../components/PotentialAndPDI';
 import { useEvaluation } from '../../hooks/useEvaluation';
+import { pdiService } from '../../services/pdiService';
 import { useAuth } from '../../context/AuthContext';
 import type { UserWithDetails } from '../../types/supabase';
 
@@ -36,7 +37,7 @@ interface PdiData {
 }
 
 const PdiManagement: React.FC = () => {
-  const { employees, loadPDI, savePDI } = useEvaluation();
+  const { employees } = useEvaluation();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [pdiData, setPdiData] = useState<PdiData>({
     colaboradorId: '',
@@ -73,9 +74,17 @@ const PdiManagement: React.FC = () => {
         });
 
         try {
-          const loadedPdi = await loadPDI(selectedEmployeeId);
+          const loadedPdi = await pdiService.getPDI(selectedEmployeeId);
           if (loadedPdi) {
-            setPdiData(loadedPdi);
+            // Transform API data to component format
+            const transformedPdi = pdiService.transformPDIDataFromAPI(loadedPdi);
+            setPdiData({
+              ...transformedPdi,
+              colaboradorId: selectedEmployeeId,
+              colaborador: employeeProfile?.name || '',
+              cargo: employeeProfile?.position || '',
+              departamento: employeeProfile?.departments?.map(dep => dep.name).join(', ') || 'Não definido'
+            });
             toast.success('PDI carregado com sucesso!');
           } else {
             toast('Nenhum PDI encontrado para este colaborador. Crie um novo!');
@@ -89,7 +98,7 @@ const PdiManagement: React.FC = () => {
       }
     };
     fetchPdi();
-  }, [selectedEmployeeId, employees, loadPDI]);
+  }, [selectedEmployeeId, employees]);
 
   const handleSavePDI = useCallback(async () => {
     if (!pdiData.colaboradorId) {
@@ -116,25 +125,34 @@ const PdiManagement: React.FC = () => {
       `Como desenvolver: ${item.comoDesenvolver || 'N/A'} (Prazo: ${item.calendarizacao || 'N/A'}, Status: ${item.status || 'N/A'}, Observação: ${item.observacao || 'N/A'}).`
     );
 
-    const pdiToSave = {
-      employeeId: pdiData.colaboradorId,
-      goals: pdiGoals,
-      actions: pdiActions,
-      resources: [],
-      timeline: pdiData.periodo,
-    };
+    // Transform PDI data to new API format
+    const pdiToSave = pdiService.transformPDIDataForAPI(pdiData);
 
     setIsSavingPDI(true);
     try {
-      await savePDI(pdiToSave);
+      await pdiService.savePDI(pdiToSave);
       toast.success('PDI salvo/atualizado com sucesso!');
+      
+      // Refresh the PDI data to get the updated version
+      const refreshedPdi = await pdiService.getPDI(pdiData.colaboradorId);
+      if (refreshedPdi) {
+        const transformedPdi = pdiService.transformPDIDataFromAPI(refreshedPdi);
+        const employeeProfile = employees.find(emp => emp.id === pdiData.colaboradorId);
+        setPdiData({
+          ...transformedPdi,
+          colaboradorId: pdiData.colaboradorId,
+          colaborador: employeeProfile?.name || '',
+          cargo: employeeProfile?.position || '',
+          departamento: employeeProfile?.departments?.map(dep => dep.name).join(', ') || 'Não definido'
+        });
+      }
     } catch (error) {
       console.error('Erro ao salvar PDI:', error);
       toast.error('Erro ao salvar PDI.');
     } finally {
       setIsSavingPDI(false);
     }
-  }, [pdiData, savePDI]);
+  }, [pdiData, employees]);
 
   const handlePdiSubmit = async () => {
     // For PDI Management page, "submit" is effectively "save"
@@ -244,15 +262,18 @@ const PdiManagement: React.FC = () => {
                 canProceedToStep3={() => true}
                 selectedEmployee={selectedEmployee}
               />
-              <div className="flex justify-end space-x-4 mt-6">
+              
+              {/* Botão de salvamento flutuante */}
+              <div className="fixed bottom-8 right-8 z-50">
                 <Button
-                  variant="outline"
+                  variant="primary"
                   onClick={handleSavePDI}
-                  icon={<Save size={18} />}
+                  icon={<Save size={20} />}
                   size="lg"
                   disabled={isSavingPDI || loadingPDI}
+                  className="shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  {isSavingPDI ? 'Salvando PDI...' : 'Salvar PDI'}
+                  {isSavingPDI ? 'Salvando...' : 'Salvar PDI'}
                 </Button>
               </div>
             </>

@@ -873,64 +873,6 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
         </motion.div>
       )}
 
-      {currentStep === 3 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0"
-        >
-          <div className="flex items-center space-x-2 text-sm">
-            {(pdiData.curtosPrazos.length === 0 && pdiData.mediosPrazos.length === 0 && pdiData.longosPrazos.length === 0) ? (
-              <>
-                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
-                <span className="text-gray-600 dark:text-gray-400">
-                  Adicione pelo menos um item de desenvolvimento para continuar
-                </span>
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 dark:text-green-400 flex-shrink-0" />
-                <span className="text-green-600 dark:text-green-400 font-medium">
-                  PDI definido! Total de {pdiData.curtosPrazos.length + pdiData.mediosPrazos.length + pdiData.longosPrazos.length} itens adicionados.
-                </span>
-              </>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-            <Button
-              variant="outline"
-              onClick={handlePreviousStep}
-              icon={<ArrowLeft size={18} />}
-              size="lg"
-              className="w-full sm:w-auto"
-            >
-              Voltar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleSave}
-              icon={<Save size={18} />}
-              size="lg"
-              disabled={isSaving || loading}
-              className="w-full sm:w-auto"
-            >
-              {isSaving ? 'Salvando...' : 'Salvar Rascunho'}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSubmit}
-              icon={<Send size={18} />}
-              size="lg"
-              disabled={(pdiData.curtosPrazos.length === 0 && pdiData.mediosPrazos.length === 0 && pdiData.longosPrazos.length === 0) || isSaving || loading}
-              className="w-full sm:w-auto"
-            >
-              {isSaving ? 'Enviando...' : 'Enviar Avaliação'}
-            </Button>
-          </div>
-        </motion.div>
-      )}
     </>
   );
 };

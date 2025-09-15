@@ -278,7 +278,7 @@ export const evaluationService = {
     timeline?: string;
   }): Promise<any> {
     try {
-      const response = await api.post('/evaluations/pdi', pdiData);
+      const response = await api.post('/pdi', pdiData);
       return response.data;
     } catch (error) {
       console.error('Erro ao salvar PDI:', error);
@@ -288,7 +288,7 @@ export const evaluationService = {
 
   async getPDI(employeeId: string): Promise<any> {
     try {
-      const response = await api.get(`/evaluations/pdi/${employeeId}`);
+      const response = await api.get(`/pdi/${employeeId}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar PDI:', error);
