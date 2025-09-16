@@ -94,6 +94,7 @@ const EvaluationManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'bulk-evaluation'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [usersEvaluationData, setUsersEvaluationData] = useState<UserEvaluationData[]>([]);
   const [saving, setSaving] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
@@ -130,7 +131,81 @@ const EvaluationManagement: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      const userData = await userService.getUsers({ active: true });
+      // Carrega TODOS os usuários do sistema - colaboradores, líderes e diretores
+      console.log('🔄 Iniciando carregamento de TODOS os usuários sem filtros...');
+      const userData = await userService.getAllUsers();
+      console.log('✅ Dados recebidos do backend:', userData?.length || 0, 'usuários');
+
+
+      // Função helper para verificar se é líder (mais robusta)
+      const isLeader = (user: any) => {
+        // Método 1: Verificação pelos campos booleanos
+        const leader = user.is_leader === true || user.is_leader === 'true' || user.is_leader === 1;
+        const director = user.is_director === true || user.is_director === 'true' || user.is_director === 1;
+
+        // Método 2: Verificação por cargo (fallback)
+        const cargoLideranca = user.position && (
+          user.position.toLowerCase().includes('gerente') ||
+          user.position.toLowerCase().includes('diretor') ||
+          user.position.toLowerCase().includes('coordenador') ||
+          user.position.toLowerCase().includes('líder') ||
+          user.position.toLowerCase().includes('lider') ||
+          user.position.toLowerCase().includes('supervisor') ||
+          user.position.toLowerCase().includes('head') ||
+          user.position.toLowerCase().includes('manager')
+        );
+
+        return leader || director || cargoLideranca;
+      };
+
+      // DEBUG SIMPLIFICADO - mostrar dados brutos
+      console.log('🔍 DADOS BRUTOS - Primeiros 5 usuários:');
+      userData.slice(0, 5).forEach((user, i) => {
+        console.log(`User ${i+1}: ${user.name}`, {
+          is_leader: user.is_leader,
+          is_director: user.is_director,
+          tipo_leader: typeof user.is_leader,
+          tipo_director: typeof user.is_director
+        });
+      });
+
+      // Valores únicos
+      const valoresLeader = [...new Set(userData.map(u => u.is_leader))];
+      const valoresDirector = [...new Set(userData.map(u => u.is_director))];
+      console.log('🎯 Valores únicos is_leader:', valoresLeader);
+      console.log('🎯 Valores únicos is_director:', valoresDirector);
+
+      const leaders = userData.filter(isLeader);
+      const directors = userData.filter(u => u.is_director === true || u.is_director === 'true' || u.is_director === 1);
+      const collaborators = userData.filter(u => !isLeader(u));
+
+      console.log(`🎯 RESUMO COMPLETO DOS USUÁRIOS CARREGADOS:`);
+      console.log(`Total de usuários: ${userData.length}`);
+      console.log(`- Diretores: ${directors.length}`);
+      console.log(`- Líderes (não-diretores): ${leaders.length - directors.length}`);
+      console.log(`- Colaboradores: ${collaborators.length}`);
+
+      if (leaders.length === 0) {
+        console.log('⚠️ IMPORTANTE: Função isLeader() não está detectando líderes.');
+        console.log('💡 Vamos tentar detectar de outras formas...');
+
+        // Tentar diferentes métodos de detecção
+        const leadersMethod1 = userData.filter(u => u.is_leader);
+        const leadersMethod2 = userData.filter(u => u.is_director);
+        const leadersMethod3 = userData.filter(u => Boolean(u.is_leader) || Boolean(u.is_director));
+
+        console.log('Líderes (método 1 - truthy is_leader):', leadersMethod1.length);
+        console.log('Líderes (método 2 - truthy is_director):', leadersMethod2.length);
+        console.log('Líderes (método 3 - Boolean cast):', leadersMethod3.length);
+
+        if (leadersMethod1.length > 0) {
+          console.log('Exemplo de usuário com is_leader truthy:', leadersMethod1[0]);
+        }
+        if (leadersMethod2.length > 0) {
+          console.log('Exemplo de usuário com is_director truthy:', leadersMethod2[0]);
+        }
+      }
+
       setUsers(userData);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
@@ -583,10 +658,37 @@ const EvaluationManagement: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Função helper para verificar se é líder (reutilizada)
+  const isLeaderUser = (user: any) => {
+    // Método 1: Verificação pelos campos booleanos
+    const leader = user.is_leader === true || user.is_leader === 'true' || user.is_leader === 1;
+    const director = user.is_director === true || user.is_director === 'true' || user.is_director === 1;
+
+    // Método 2: Verificação por cargo (fallback)
+    const cargoLideranca = user.position && (
+      user.position.toLowerCase().includes('gerente') ||
+      user.position.toLowerCase().includes('diretor') ||
+      user.position.toLowerCase().includes('coordenador') ||
+      user.position.toLowerCase().includes('líder') ||
+      user.position.toLowerCase().includes('lider') ||
+      user.position.toLowerCase().includes('supervisor') ||
+      user.position.toLowerCase().includes('head') ||
+      user.position.toLowerCase().includes('manager')
+    );
+
+    return leader || director || cargoLideranca;
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesRole = roleFilter === 'all' ||
+                       (roleFilter === 'leaders' && isLeaderUser(user)) ||
+                       (roleFilter === 'collaborators' && !isLeaderUser(user));
+
+    return matchesSearch && matchesRole;
+  });
 
   const getEvaluationStatus = (userId: string, type: 'self' | 'leader') => {
     const evaluation = evaluations.find(e => e.employee_id === userId && e.type === type);
@@ -694,7 +796,7 @@ const EvaluationManagement: React.FC = () => {
               Gerenciamento de Avaliações
             </h1>
             <p className="text-primary-100 dark:text-secondary-100 mt-2 text-lg">
-              Gerencie autoavaliações, avaliações do líder e PDIs de forma eficiente
+              Gerencie autoavaliações, avaliações do líder e PDIs para todos os usuários: colaboradores, líderes e diretores
             </p>
           </div>
         </div>
@@ -791,11 +893,23 @@ const EvaluationManagement: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Buscar colaboradores..."
+                placeholder="Buscar usuários (colaboradores, líderes, diretores)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
+            </div>
+            <div className="relative">
+              <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 appearance-none"
+              >
+                <option value="all">Todos os Usuários</option>
+                <option value="collaborators">Apenas Colaboradores</option>
+                <option value="leaders">Apenas Líderes/Diretores</option>
+              </select>
             </div>
             {activeTab !== 'overview' && (
               <div className="relative">
@@ -824,7 +938,7 @@ const EvaluationManagement: React.FC = () => {
                     Avaliação em Lote - {cycles.find(c => c.id === selectedCycle)?.title}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Preencha as notas e PDIs para todos os colaboradores
+                    Preencha as notas e PDIs para todos os usuários: colaboradores, líderes e diretores
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -850,7 +964,17 @@ const EvaluationManagement: React.FC = () => {
 
               {/* Evaluation Form */}
               <div className="space-y-4">
-                {usersEvaluationData.map((userData) => {
+                {usersEvaluationData.filter(userData => {
+                  const user = userData.user;
+                  const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                       user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+                  const matchesRole = roleFilter === 'all' ||
+                                     (roleFilter === 'leaders' && isLeaderUser(user)) ||
+                                     (roleFilter === 'collaborators' && !isLeaderUser(user));
+
+                  return matchesSearch && matchesRole;
+                }).map((userData) => {
                   const isExpanded = expandedCards.has(userData.user.id);
                   const hasAnyData = (
                     Object.values(userData.selfEvaluation.competencies.technical).some(v => v !== null) ||
@@ -890,8 +1014,18 @@ const EvaluationManagement: React.FC = () => {
                               {userData.user.name.charAt(0)}
                             </div>
                             <div>
-                              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                                {userData.user.name}
+                              <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center space-x-2">
+                                <span>{userData.user.name}</span>
+                                {(userData.user.is_director === true || userData.user.is_director === 'true' || userData.user.is_director === 1) && (
+                                  <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                                    Diretor
+                                  </span>
+                                )}
+                                {(userData.user.is_leader === true || userData.user.is_leader === 'true' || userData.user.is_leader === 1) && !(userData.user.is_director === true || userData.user.is_director === 'true' || userData.user.is_director === 1) && (
+                                  <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                                    Líder
+                                  </span>
+                                )}
                               </h3>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
                                 {userData.user.position}
@@ -1033,8 +1167,18 @@ const EvaluationManagement: React.FC = () => {
                           {user.name.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                            {user.name}
+                          <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center space-x-2">
+                            <span>{user.name}</span>
+                            {(user.is_director === true || user.is_director === 'true' || user.is_director === 1) && (
+                              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                                Diretor
+                              </span>
+                            )}
+                            {(user.is_leader === true || user.is_leader === 'true' || user.is_leader === 1) && !(user.is_director === true || user.is_director === 'true' || user.is_director === 1) && (
+                              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                                Líder
+                              </span>
+                            )}
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {user.position} • {user.department?.name}
@@ -1071,7 +1215,7 @@ const EvaluationManagement: React.FC = () => {
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                Nenhum colaborador encontrado
+                Nenhum usuário encontrado
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
                 Tente ajustar seus filtros de busca.

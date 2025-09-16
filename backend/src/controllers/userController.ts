@@ -4,12 +4,21 @@ import { userService } from '../services/userService';
 export const userController = {
   async getUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const filters = {
-        active: req.query.active === 'true',
-        is_leader: req.query.is_leader === 'true',
-        is_director: req.query.is_director === 'true',
-        reports_to: req.query.reports_to as string
-      };
+      const filters: any = {};
+
+      // Só aplicar filtros quando explicitamente fornecidos
+      if (req.query.active !== undefined) {
+        filters.active = req.query.active === 'true';
+      }
+      if (req.query.is_leader !== undefined) {
+        filters.is_leader = req.query.is_leader === 'true';
+      }
+      if (req.query.is_director !== undefined) {
+        filters.is_director = req.query.is_director === 'true';
+      }
+      if (req.query.reports_to) {
+        filters.reports_to = req.query.reports_to as string;
+      }
 
       const users = await userService.getUsers(filters);
       
@@ -103,7 +112,7 @@ export const userController = {
     try {
       const { leaderId } = req.params;
       const subordinates = await userService.getSubordinates(leaderId);
-      
+
       res.json({
         success: true,
         data: subordinates
@@ -111,5 +120,27 @@ export const userController = {
     } catch (error) {
       next(error);
     }
+  },
+
+  // Endpoint temporário para configurar líderes
+  async setUserAsLeader(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userId } = req.params;
+      const { is_leader, is_director } = req.body;
+
+      const user = await userService.updateUser(userId, {
+        is_leader: is_leader === true,
+        is_director: is_director === true
+      });
+
+      res.json({
+        success: true,
+        data: user,
+        message: `Usuário ${user.name} atualizado com sucesso`
+      });
+    } catch (error) {
+      next(error);
+    }
   }
+
 };

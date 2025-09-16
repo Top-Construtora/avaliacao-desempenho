@@ -66,6 +66,33 @@ export const userService = {
       throw new ApiError(500, 'Failed to fetch users');
     }
 
+    // Debug dos dados do Supabase
+    if (data && data.length > 0) {
+      const leadersFromDB = data.filter(u => u.is_leader === true || u.is_director === true);
+      const leadersLoose = data.filter(u => u.is_leader || u.is_director);
+
+      console.log(`[BACKEND] Total usuários: ${data.length} | Líderes (strict): ${leadersFromDB.length} | Líderes (loose): ${leadersLoose.length}`);
+
+      if (leadersLoose.length > 0) {
+        console.log('[BACKEND] Primeiros líderes encontrados:', leadersLoose.slice(0, 2).map(u => ({
+          name: u.name,
+          is_leader: u.is_leader,
+          is_director: u.is_director,
+          type_leader: typeof u.is_leader,
+          type_director: typeof u.is_director
+        })));
+      } else {
+        // Se não encontrou líderes, mostrar tipos dos primeiros usuários
+        console.log('[BACKEND] Nenhum líder encontrado. Tipos dos primeiros usuários:', data.slice(0, 2).map(u => ({
+          name: u.name,
+          is_leader: u.is_leader,
+          is_director: u.is_director,
+          type_leader: typeof u.is_leader,
+          type_director: typeof u.is_director
+        })));
+      }
+    }
+
     return data;
   },
 

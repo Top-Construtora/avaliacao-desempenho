@@ -12,6 +12,7 @@ router.get('/:id', userController.getUserById);
 router.post('/', userController.createUser);
 router.post('/create-with-auth', userController.createUserWithAuth);
 router.put('/:id', userController.updateUser);
+router.put('/set-leader/:userId', userController.setUserAsLeader);
 router.delete('/:id', userController.deleteUser);
 router.get('/leader/:leaderId/subordinates', userController.getSubordinates);
 
