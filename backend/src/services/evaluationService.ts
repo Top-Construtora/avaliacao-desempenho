@@ -134,6 +134,17 @@ export const evaluationService = {
   // Dashboard do ciclo
   async getCycleDashboard(supabase: any, cycleId: string) {
     try {
+      // Primeiro, buscar todos os usuários ativos
+      const { data: allUsers, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, email, position')
+        .eq('active', true);
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw new ApiError(500, usersError.message);
+      }
+
       // Buscar autoavaliações
       const { data: selfEvals } = await supabase
         .from('self_evaluations')
@@ -165,24 +176,27 @@ export const evaluationService = {
       // Combinar dados para o dashboard
       const employeeMap = new Map<string, CycleDashboard>();
 
+      // Primeiro, inicializar todos os usuários ativos no mapa
+      allUsers?.forEach((user: any) => {
+        employeeMap.set(user.id, {
+          employee_id: user.id,
+          employee_name: user.name || '',
+          employee_email: user.email || '',
+          employee_position: user.position || '',
+          self_evaluation_status: 'pending',
+          self_evaluation_score: null,
+          leader_evaluation_status: 'pending',
+          leader_evaluation_score: null,
+          consensus_status: 'pending',
+          consensus_performance_score: null,
+          consensus_potential_score: null
+        });
+      });
+
       // Processar autoavaliações
       selfEvals?.forEach((se: any) => {
         const empId = se.employee_id;
-        if (!employeeMap.has(empId)) {
-          employeeMap.set(empId, {
-            employee_id: empId,
-            employee_name: se.employee?.name || '',
-            employee_email: se.employee?.email || '',
-            employee_position: se.employee?.position || '',
-            self_evaluation_status: se.status,
-            self_evaluation_score: se.final_score || null,
-            leader_evaluation_status: 'pending',
-            leader_evaluation_score: null,
-            consensus_status: 'pending',
-            consensus_performance_score: null,
-            consensus_potential_score: null
-          });
-        } else {
+        if (employeeMap.has(empId)) {
           const emp = employeeMap.get(empId)!;
           emp.self_evaluation_status = se.status;
           emp.self_evaluation_score = se.final_score || null;
@@ -192,21 +206,7 @@ export const evaluationService = {
       // Processar avaliações de líder
       leaderEvals?.forEach((le: any) => {
         const empId = le.employee_id;
-        if (!employeeMap.has(empId)) {
-          employeeMap.set(empId, {
-            employee_id: empId,
-            employee_name: le.employee?.name || '',
-            employee_email: le.employee?.email || '',
-            employee_position: le.employee?.position || '',
-            self_evaluation_status: 'pending',
-            self_evaluation_score: null,
-            leader_evaluation_status: le.status,
-            leader_evaluation_score: le.final_score || null,
-            consensus_status: 'pending',
-            consensus_performance_score: null,
-            consensus_potential_score: null
-          });
-        } else {
+        if (employeeMap.has(empId)) {
           const emp = employeeMap.get(empId)!;
           emp.leader_evaluation_status = le.status;
           emp.leader_evaluation_score = le.final_score || null;
@@ -226,7 +226,33 @@ export const evaluationService = {
         }
       });
 
-      return Array.from(employeeMap.values());
+      // MOCK TEMPORÁRIO: Gerar notas aleatórias para demonstração do Nine-Box
+      const dashboardData = Array.from(employeeMap.values()).map((emp, index) => {
+        // Se não tem consenso, usar mock de dados
+        if (!emp.consensus_performance_score || emp.consensus_performance_score === 0) {
+          // Gerar notas variadas para demonstrar diferentes posições no Nine-Box
+          const mockScores = [
+            { performance: 3.8, potential: 3.7 }, // Alto/Alto
+            { performance: 3.5, potential: 2.5 }, // Alto/Médio
+            { performance: 3.2, potential: 1.8 }, // Alto/Baixo
+            { performance: 2.5, potential: 3.6 }, // Médio/Alto
+            { performance: 2.3, potential: 2.4 }, // Médio/Médio
+            { performance: 2.6, potential: 1.7 }, // Médio/Baixo
+            { performance: 1.8, potential: 3.5 }, // Baixo/Alto
+            { performance: 1.5, potential: 2.3 }, // Baixo/Médio
+            { performance: 1.6, potential: 1.5 }, // Baixo/Baixo
+          ];
+
+          // Usar índice para distribuir os colaboradores em diferentes quadrantes
+          const mockIndex = index % mockScores.length;
+          emp.consensus_performance_score = mockScores[mockIndex].performance;
+          emp.consensus_potential_score = mockScores[mockIndex].potential;
+        }
+
+        return emp;
+      });
+
+      return dashboardData;
     } catch (error: any) {
       console.error('Service error:', error);
       throw error;
