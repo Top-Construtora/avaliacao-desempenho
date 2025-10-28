@@ -1,20 +1,33 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles, Clock } from 'lucide-react';
 import logo from '../../../assets/images/logo.png';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
-  
+  const [searchParams] = useSearchParams();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [sessionExpiredWarning, setSessionExpiredWarning] = useState(false);
+
+  useEffect(() => {
+    // Verifica se a sessão expirou
+    if (searchParams.get('session_expired') === 'true') {
+      setSessionExpiredWarning(true);
+      // Remove o parâmetro da URL após 5 segundos
+      setTimeout(() => {
+        setSessionExpiredWarning(false);
+      }, 10000);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +97,24 @@ export default function Login() {
               Entre com suas credenciais para acessar
             </p>
           </div>
+
+          {/* Mensagem de Sessão Expirada */}
+          {sessionExpiredWarning && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-3 text-sm text-amber-800 bg-amber-50 p-4 rounded-xl border border-amber-200"
+            >
+              <Clock className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium mb-1">Sua sessão expirou por inatividade</p>
+                <p className="text-xs text-amber-700">
+                  Por segurança, você precisa fazer login novamente para continuar.
+                  Não se preocupe, seu trabalho foi salvo automaticamente.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-5">
