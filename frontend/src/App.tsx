@@ -34,7 +34,6 @@ import TrackPositionsPage from './pages/carrer/TrackPositionsPage';
 import CareerTrackDetail from './pages/carrer/CareerTrackDetail';
 import PdiManagement from './pages/pdi/PdiManagement';
 import EvaluationManagement from './pages/evaluations/EvaluationManagement';
-import BulkEvaluationUpload from './pages/evaluations/BulkEvaluationUpload';
 
 const USE_SUPABASE_AUTH = import.meta.env.VITE_USE_SUPABASE_AUTH === 'true';
 
@@ -94,7 +93,7 @@ function App() {
                     <Route
                       path="self-evaluation"
                       element={
-                        <ProtectedRoute allowedRoles={['collaborator', 'leader']}>
+                        <ProtectedRoute allowedRoles={['admin', 'collaborator', 'leader']}>
                           <SelfEvaluation />
                         </ProtectedRoute>
                       }
@@ -103,7 +102,7 @@ function App() {
                     <Route
                       path="leader-evaluation"
                       element={
-                        <ProtectedRoute allowedRoles={['leader', 'director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'leader', 'director']}>
                           <LeaderEvaluation />
                         </ProtectedRoute>
                       }
@@ -112,7 +111,7 @@ function App() {
                     <Route
                       path="leader-evaluations"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <EvaluationDashboard />
                         </ProtectedRoute>
                       }
@@ -121,7 +120,7 @@ function App() {
                     <Route
                       path="consensus"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <Consensus />
                         </ProtectedRoute>
                       }
@@ -130,7 +129,7 @@ function App() {
                     <Route
                       path="nine-box"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <NineBoxMatrix />
                         </ProtectedRoute>
                       }
@@ -139,7 +138,7 @@ function App() {
                     <Route
                       path="/salary/tracks/:trackId"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <TrackPositionsPage />
                         </ProtectedRoute>
                       }
@@ -148,7 +147,7 @@ function App() {
                     <Route
                       path="reports"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <Reports />
                         </ProtectedRoute>
                       }
@@ -160,7 +159,7 @@ function App() {
                     <Route
                       path="users"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <UserManagement />
                         </ProtectedRoute>
                       }
@@ -169,7 +168,7 @@ function App() {
                     <Route
                       path="salary"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <SalaryAdminPage />
                         </ProtectedRoute>
                       }
@@ -179,7 +178,7 @@ function App() {
                     <Route
                       path="register/user"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <RegisterUser />
                         </ProtectedRoute>
                       }
@@ -188,7 +187,7 @@ function App() {
                     <Route
                       path="register/team"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <RegisterTeam />
                         </ProtectedRoute>
                       }
@@ -197,7 +196,7 @@ function App() {
                     <Route
                       path="register/department"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <RegisterDepartment />
                         </ProtectedRoute>
                       }
@@ -206,7 +205,7 @@ function App() {
                     <Route
                       path="/users"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <UserManagement />
                         </ProtectedRoute>
                       }
@@ -215,7 +214,7 @@ function App() {
                     <Route
                       path="/teams"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <TeamManagement />
                         </ProtectedRoute>
                       }
@@ -224,7 +223,7 @@ function App() {
                     <Route
                       path="/departments"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <DepartmentManagement />
                         </ProtectedRoute>
                       }
@@ -234,7 +233,7 @@ function App() {
                     <Route
                       path="users/edit/:id"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <UserEdit />
                         </ProtectedRoute>
                       }
@@ -243,7 +242,7 @@ function App() {
                     <Route
                       path="teams/edit/:id"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <EditTeam />
                         </ProtectedRoute>
                       }
@@ -251,7 +250,7 @@ function App() {
                     <Route
                       path="departments/edit/:id"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <EditDepartment />
                         </ProtectedRoute>
                       }
@@ -261,7 +260,7 @@ function App() {
                     <Route
                       path="cycle"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <CycleManagement />
                         </ProtectedRoute>
                       }
@@ -270,7 +269,7 @@ function App() {
                     <Route
                       path="nine-box-guide"
                       element={
-                        <ProtectedRoute allowedRoles={['director', 'leader']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director', 'leader']}>
                           <NineBoxGuide />
                         </ProtectedRoute>
                       }
@@ -280,7 +279,7 @@ function App() {
                     <Route
                       path="career-track/:trackId"
                       element={
-                        <ProtectedRoute allowedRoles={['director', 'leader', 'collaborator']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director', 'leader', 'collaborator']}>
                           <CareerTrackDetail />
                         </ProtectedRoute>
                       }
@@ -289,24 +288,14 @@ function App() {
                     <Route
                       path="evaluation-management"
                       element={
-                        <ProtectedRoute allowedRoles={['director']}>
+                        <ProtectedRoute allowedRoles={['admin', 'director']}>
                           <EvaluationManagement />
                         </ProtectedRoute>
                       }
                     />
 
-                    {/* Bulk Evaluation Upload */}
-                    <Route
-                      path="bulk-evaluation-upload"
-                      element={
-                        <ProtectedRoute allowedRoles={['director']}>
-                          <BulkEvaluationUpload />
-                        </ProtectedRoute>
-                      }
-                    />
-
                     {/* PDI Management (New Route) */}
-                    <Route path="pdi" element={<ProtectedRoute allowedRoles={['director', 'leader']}><PdiManagement /></ProtectedRoute>} />
+                    <Route path="pdi" element={<ProtectedRoute allowedRoles={['admin', 'director', 'leader']}><PdiManagement /></ProtectedRoute>} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
@@ -332,7 +321,6 @@ function App() {
                     <Route path="self-evaluation" element={<SelfEvaluation />} />
                     <Route path="leader-evaluation" element={<LeaderEvaluation />} />
                     <Route path="evaluation-management" element={<EvaluationManagement />} />
-                    <Route path="bulk-evaluation-upload" element={<BulkEvaluationUpload />} />
                     <Route path="consensus" element={<Consensus />} />
                     <Route path="/users" element={<UserManagement />} />
                     <Route path="/teams" element={<TeamManagement />} />

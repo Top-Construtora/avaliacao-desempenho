@@ -1045,6 +1045,7 @@ const RegisterUser = () => {
                   </option>
                   {users
                     .filter(u => {
+                      if (u.is_master) return false; // Admins não aparecem no select
                       if (formData.profileType === 'regular') {
                         return u.is_leader || u.is_director;
                       }

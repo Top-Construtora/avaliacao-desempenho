@@ -169,8 +169,8 @@ const RegisterDepartment = () => {
                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
                 <select
                   className={`w-full pl-12 pr-10 py-3 rounded-xl border-2 transition-all appearance-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                    formErrors.responsible 
-                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500' 
+                    formErrors.responsible
+                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500 dark:focus:ring-purple-400'
                   }`}
                   value={formData.departmentResponsibleId}
@@ -178,10 +178,16 @@ const RegisterDepartment = () => {
                 >
                   <option value="">Selecione um responsável</option>
                   {users
-                    .filter(u => u.is_director)
+                    .filter(u => (u.is_leader || u.is_director) && !u.is_master)
+                    .sort((a, b) => {
+                      // Ordena: diretores primeiro, depois líderes, e por nome
+                      if (a.is_director && !b.is_director) return -1;
+                      if (!a.is_director && b.is_director) return 1;
+                      return a.name.localeCompare(b.name);
+                    })
                     .map(user => (
                       <option key={user.id} value={user.id}>
-                        {user.name} - {user.position}
+                        {user.name} {user.is_director ? '(Diretor)' : '(Líder)'}
                       </option>
                     ))}
                 </select>
@@ -192,6 +198,9 @@ const RegisterDepartment = () => {
                   {formErrors.responsible}
                 </p>
               )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Selecione um líder ou diretor para ser responsável por este departamento
+              </p>
             </div>
 
             <div>

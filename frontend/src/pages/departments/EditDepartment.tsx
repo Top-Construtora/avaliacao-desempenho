@@ -220,10 +220,16 @@ const EditDepartment = () => {
                 >
                   <option value="">Selecione um responsável</option>
                   {users
-                    .filter(u => u.is_director)
+                    .filter(u => (u.is_leader || u.is_director) && !u.is_master)
+                    .sort((a, b) => {
+                      // Ordena: diretores primeiro, depois líderes, e por nome
+                      if (a.is_director && !b.is_director) return -1;
+                      if (!a.is_director && b.is_director) return 1;
+                      return a.name.localeCompare(b.name);
+                    })
                     .map(user => (
                       <option key={user.id} value={user.id}>
-                        {user.name} - {user.position}
+                        {user.name} {user.is_director ? '(Diretor)' : '(Líder)'}
                       </option>
                     ))}
                 </select>
@@ -234,6 +240,9 @@ const EditDepartment = () => {
                   {formErrors.responsible}
                 </p>
               )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Selecione um líder ou diretor para ser responsável por este departamento
+              </p>
             </div>
 
             <div>

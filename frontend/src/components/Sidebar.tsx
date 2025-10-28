@@ -64,7 +64,7 @@ export default function Sidebar({
       label: 'Cadastrar',
       icon: Plus,
       hasDropdown: true,
-      allowedRoles: ['director', 'master'],
+      allowedRoles: ['admin', 'director'],
       subItems: [
         {
           label: 'Cadastrar Usuário',
@@ -87,7 +87,7 @@ export default function Sidebar({
       label: 'Gerenciar',
       icon: Layers,
       hasDropdown: true,
-      allowedRoles: ['director', 'master'],
+      allowedRoles: ['admin', 'director'],
       subItems: [
         {
           label: 'Gerenciar Usuários',
@@ -110,19 +110,19 @@ export default function Sidebar({
       label: 'Cargos e Salários',
       icon: DollarSign,
       path: '/salary',
-      allowedRoles: ['director', 'master']
+      allowedRoles: ['admin', 'director']
     },
     {
       label: 'Gerenciar PDI',
       icon: BookOpen,
       path: '/pdi',
-      allowedRoles: ['director', 'leader']
+      allowedRoles: ['admin', 'director', 'leader']
     },
     {
       label: 'Gerenciar Ciclos',
       icon: RotateCcw,
       path: '/cycle',
-      allowedRoles: ['director', 'master'],
+      allowedRoles: ['admin', 'director'],
     },
     {
       label: 'Autoavaliação',
@@ -134,56 +134,55 @@ export default function Sidebar({
       label: 'Avaliação do Líder',
       icon: Users,
       path: '/leader-evaluation',
-      allowedRoles: ['leader', 'director', 'master'],
+      allowedRoles: ['admin', 'leader', 'director'],
     },
     {
       label: 'Gerenciar Avaliações',
       icon: Settings,
       path: '/evaluation-management',
-      allowedRoles: ['master', 'director'],
-    },
-    {
-      label: 'Upload em Lote',
-      icon: Upload,
-      path: '/bulk-evaluation-upload',
-      allowedRoles: ['master'],
+      allowedRoles: ['admin', 'director'],
     },
     {
       label: 'Consenso',
       icon: Handshake,
       path: '/consensus',
-      allowedRoles: ['director', 'master'],
+      allowedRoles: ['admin', 'director'],
     },
     {
       label: 'Matriz 9 Box',
       icon: Grid3X3,
       path: '/nine-box',
-      allowedRoles: ['director', 'master'],
+      allowedRoles: ['admin', 'director'],
     },
     {
       label: 'Relatórios',
       icon: PieChart,
       path: '/reports',
-      allowedRoles: ['director', 'master'],
+      allowedRoles: ['admin', 'director'],
     },
     {
       label: 'Guia NineBox',
       icon: BookOpen,
       path: '/nine-box-guide',
-      allowedRoles: ['director', 'leader'],
+      allowedRoles: ['admin', 'director', 'leader'],
     },
   ];
 
   // Filtrar itens baseado no papel do usuário
   const filteredNavItems = navItems.filter(item => {
+    // Admin vê tudo
+    if (role === 'admin') {
+      return true;
+    }
+
     if (item.hideForRoles && item.hideForRoles.includes(role as 'director' | 'leader' | 'collaborator')) {
       return false;
     }
-    
-    if (item.allowedRoles && !item.allowedRoles.includes(role as 'director' | 'leader' | 'collaborator')) {
+
+    if (item.allowedRoles && !item.allowedRoles.includes(role as 'admin' | 'director' | 'leader' | 'collaborator')) {
       return false;
     }
-    
+
     return true;
   });
 
