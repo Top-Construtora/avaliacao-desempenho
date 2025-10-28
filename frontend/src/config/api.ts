@@ -21,7 +21,7 @@ export const api = {
   baseURL: API_BASE_URL,
 
   async request(endpoint: string, options: RequestInit = {}, isRetry = false) {
-    const token = localStorage.getItem('access_token');
+    const token = sessionStorage.getItem('access_token');
 
     // Headers padrão limpos
     const headers: HeadersInit = {
@@ -77,8 +77,8 @@ export const api = {
               throw new Error('Falha ao renovar sessão');
             }
 
-            // Atualiza o token no localStorage
-            localStorage.setItem('access_token', session.access_token);
+            // Atualiza o token no sessionStorage
+            sessionStorage.setItem('access_token', session.access_token);
 
             // Notifica todos os requests que estavam aguardando
             onTokenRefreshed(session.access_token);
@@ -90,8 +90,8 @@ export const api = {
             isRefreshing = false;
             // Se não conseguir renovar, redireciona para login
             console.error('Erro ao renovar token:', refreshError);
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('refresh_token');
             window.location.href = '/login?session_expired=true';
             throw new Error('Sessão expirada. Faça login novamente.');
           }
