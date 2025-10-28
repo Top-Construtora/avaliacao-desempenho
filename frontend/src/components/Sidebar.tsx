@@ -115,7 +115,7 @@ export default function Sidebar({
     {
       label: 'Gerenciar PDI',
       icon: BookOpen,
-      path: 'pdi',
+      path: '/pdi',
       allowedRoles: ['director', 'leader']
     },
     {
@@ -158,12 +158,6 @@ export default function Sidebar({
       label: 'Matriz 9 Box',
       icon: Grid3X3,
       path: '/nine-box',
-      allowedRoles: ['director', 'master'],
-    },
-    {
-      label: 'PDI',
-      icon: FileText,
-      path: '/action-plan',
       allowedRoles: ['director', 'master'],
     },
     {

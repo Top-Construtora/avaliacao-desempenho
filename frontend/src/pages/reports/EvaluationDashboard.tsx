@@ -30,13 +30,13 @@ const EvaluationDashboard: React.FC = () => {
     leaderCompleted: dashboard.filter(d => d.leader_evaluation_status === 'completed').length,
     consensusCompleted: dashboard.filter(d => d.consensus_status === 'completed').length,
     avgPerformance: dashboard
-      .filter(d => d.consensus_performance_score)
-      .reduce((sum, d) => sum + (d.consensus_performance_score || 0), 0) / 
-      (dashboard.filter(d => d.consensus_performance_score).length || 1),
+      .filter(d => d.consensus_score)
+      .reduce((sum, d) => sum + (d.consensus_score || 0), 0) / 
+      (dashboard.filter(d => d.consensus_score).length || 1),
     avgPotential: dashboard
-      .filter(d => d.consensus_potential_score)
-      .reduce((sum, d) => sum + (d.consensus_potential_score || 0), 0) / 
-      (dashboard.filter(d => d.consensus_potential_score).length || 1)
+      .filter(d => d.potential_score)
+      .reduce((sum, d) => sum + (d.potential_score || 0), 0) / 
+      (dashboard.filter(d => d.potential_score).length || 1)
   };
 
   // Filter employees
@@ -338,13 +338,13 @@ const EvaluationDashboard: React.FC = () => {
 
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {employee.consensus_performance_score?.toFixed(2) || '-'}
+                        {employee.consensus_score?.toFixed(2) || '-'}
                         </span>
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {employee.consensus_potential_score?.toFixed(2) || '-'}
+                        {employee.potential_score?.toFixed(2) || '-'}
                         </span>
                     </td>
 

@@ -225,8 +225,8 @@ export interface Database {
           cycle_id: string | null
           evaluation_type: 'self' | 'leader' | 'consensus' | null
           potential_score: number | null
-          consensus_performance_score: number | null
-          consensus_potential_score: number | null
+          consensus_score: number | null
+          potential_score: number | null
           written_feedback: Json | null
         }
         Insert: {
@@ -248,8 +248,8 @@ export interface Database {
           cycle_id?: string | null
           evaluation_type?: 'self' | 'leader' | 'consensus' | null
           potential_score?: number | null
-          consensus_performance_score?: number | null
-          consensus_potential_score?: number | null
+          consensus_score?: number | null
+          potential_score?: number | null
           written_feedback?: Json | null
         }
         Update: {
@@ -271,8 +271,8 @@ export interface Database {
           cycle_id?: string | null
           evaluation_type?: 'self' | 'leader' | 'consensus' | null
           potential_score?: number | null
-          consensus_performance_score?: number | null
-          consensus_potential_score?: number | null
+          consensus_score?: number | null
+          potential_score?: number | null
           written_feedback?: Json | null
         }
       }

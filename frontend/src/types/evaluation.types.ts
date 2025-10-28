@@ -98,8 +98,8 @@ export interface EvaluationExtended {
   deliveries_score?: number;
   final_score?: number;
   potential_score?: number;
-  consensus_performance_score?: number;
-  consensus_potential_score?: number;
+  consensus_score?: number;
+  potential_score?: number;
   strengths?: string;
   improvements?: string;
   observations?: string;
@@ -128,8 +128,8 @@ export interface ConsensusMeeting {
   self_evaluation_id?: string; // Agora opcional
   leader_evaluation_id?: string; // Agora opcional
   meeting_date?: string;
-  consensus_performance_score: number;
-  consensus_potential_score: number;
+  consensus_score: number;
+  potential_score: number;
   meeting_notes?: string;
   participants?: string[];
   status: 'scheduled' | 'completed' | 'cancelled';
@@ -149,8 +149,8 @@ export interface CycleDashboard {
   leader_evaluation_status: string;
   leader_evaluation_score?: number | null;
   consensus_status: string;
-  consensus_performance_score?: number | null;
-  consensus_potential_score?: number | null;
+  consensus_score?: number | null;
+  potential_score?: number | null;
   // Campos extras do tipo original
   cycle_id?: string;
   cycle_title?: string;

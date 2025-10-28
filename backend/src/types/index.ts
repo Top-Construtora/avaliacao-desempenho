@@ -217,8 +217,8 @@ export interface ConsensusMeeting {
   self_evaluation_id?: string;
   leader_evaluation_id?: string;
   meeting_date?: string;
-  consensus_performance_score: number;
-  consensus_potential_score: number;
+  consensus_score: number;
+  potential_score: number;
   meeting_notes?: string;
   participants?: any;
   status?: 'scheduled' | 'completed' | 'cancelled';
@@ -238,8 +238,8 @@ export interface CycleDashboard {
   leader_evaluation_status: string;
   leader_evaluation_score?: number | null;
   consensus_status: string;
-  consensus_performance_score?: number | null;
-  consensus_potential_score?: number | null;
+  consensus_score?: number | null;
+  potential_score?: number | null;
 }
 
 // Dados do Nine Box

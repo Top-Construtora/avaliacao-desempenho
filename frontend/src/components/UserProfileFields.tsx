@@ -13,7 +13,6 @@ import {
 import {
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
-  CHILDREN_AGE_OPTIONS,
   POPULAR_SPORTS,
   Gender,
   MaritalStatus,
@@ -47,13 +46,6 @@ export const UserProfileFields: React.FC<UserProfileFieldsProps> = ({
     onChange('sports', updated);
   };
 
-  const handleChildrenAgeChange = (ageRange: string) => {
-    const currentRanges = formData.children_age_ranges || [];
-    const updated = currentRanges.includes(ageRange)
-      ? currentRanges.filter(r => r !== ageRange)
-      : [...currentRanges, ageRange];
-    onChange('children_age_ranges', updated);
-  };
 
   return (
     <div className="space-y-6">
@@ -117,43 +109,14 @@ export const UserProfileFields: React.FC<UserProfileFieldsProps> = ({
               <input
                 type="checkbox"
                 checked={formData.has_children || false}
-                onChange={(e) => {
-                  onChange('has_children', e.target.checked);
-                  if (!e.target.checked) {
-                    onChange('children_age_ranges', []);
-                  }
-                }}
+                onChange={(e) => onChange('has_children', e.target.checked)}
                 className="rounded-md border-gray-300 text-primary-600 focus:ring-primary-500 h-5 w-5"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 <Baby className="inline h-4 w-4 mr-1" />
-                Tem filhos
+                Tem filhos?
               </span>
             </label>
-
-            {/* Faixas Etárias dos Filhos */}
-            {formData.has_children && (
-              <div className="mt-4 space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Faixas etárias dos filhos
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {CHILDREN_AGE_OPTIONS.map(option => (
-                    <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={(formData.children_age_ranges || []).includes(option.value)}
-                        onChange={() => handleChildrenAgeChange(option.value)}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {option.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

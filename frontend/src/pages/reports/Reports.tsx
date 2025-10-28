@@ -237,7 +237,7 @@ const Reports = () => {
         getStatusLabel(item.self_evaluation_status),
         getStatusLabel(item.leader_evaluation_status),
         getStatusLabel(item.consensus_status),
-        item.consensus_performance_score ? item.consensus_performance_score.toFixed(1) : '-'
+        item.consensus_score ? item.consensus_score.toFixed(1) : '-'
       ];
     });
     
@@ -268,7 +268,7 @@ const Reports = () => {
         'Avaliação do Líder': getStatusLabel(item.leader_evaluation_status),
         'Consenso': getStatusLabel(item.consensus_status),
         'PDI': item.ninebox_position ? 'Definido' : 'Pendente',
-        'Nota Final': item.consensus_performance_score || '-'
+        'Nota Final': item.consensus_score || '-'
       };
     });
     
@@ -751,7 +751,7 @@ const Reports = () => {
                           {getStatusBadge(item.ninebox_position ? 'completed' : 'pending')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
-                          {getScoreBadge(item.consensus_performance_score)}
+                          {getScoreBadge(item.consensus_score)}
                         </td>
                       </tr>
                     );
@@ -793,7 +793,7 @@ const Reports = () => {
                           </p>
                         </div>
                         <div className="ml-3 text-right">
-                          {getScoreBadge(item.consensus_performance_score)}
+                          {getScoreBadge(item.consensus_score)}
                         </div>
                       </div>
                       

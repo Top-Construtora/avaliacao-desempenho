@@ -77,6 +77,13 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
   const { getNineBoxByEmployeeId } = useEvaluation();
   const employeeNineBox: NineBoxData | undefined = selectedEmployee ? getNineBoxByEmployeeId(selectedEmployee.id) : undefined;
 
+  // Helper function to convert category name to prazo key
+  const categoryToPrazo = (category: 'curtosPrazos' | 'mediosPrazos' | 'longosPrazos'): 'curto' | 'medio' | 'longo' => {
+    if (category === 'curtosPrazos') return 'curto';
+    if (category === 'mediosPrazos') return 'medio';
+    return 'longo';
+  };
+
   const [expandedPdiSections, setExpandedPdiSections] = useState({
     curto: true,
     medio: false,
@@ -134,20 +141,32 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
       return;
     }
 
-    const newItem = { ...newPdiItem, id: Date.now().toString() };
+    // Create a proper ActionItem without the prazo property
+    const actionItem: ActionItem = {
+      id: Date.now().toString(),
+      competencia: newPdiItem.competencia,
+      calendarizacao: newPdiItem.calendarizacao,
+      comoDesenvolver: newPdiItem.comoDesenvolver,
+      resultadosEsperados: newPdiItem.resultadosEsperados,
+      status: newPdiItem.status,
+      observacao: newPdiItem.observacao
+    };
 
-    setPdiData((prev: PdiData) => { // Explicitly type prev
-      if (newItem.prazo === 'curto') {
-        return { ...prev, curtosPrazos: [...prev.curtosPrazos, newItem as ActionItem] };
-      } else if (newItem.prazo === 'medio') {
-        return { ...prev, mediosPrazos: [...prev.mediosPrazos, newItem as ActionItem] };
-      } else if (newItem.prazo === 'longo') {
-        return { ...prev, longosPrazos: [...prev.longosPrazos, newItem as ActionItem] };
+    // Store the prazo before clearing
+    const currentPrazo = newPdiItem.prazo;
+
+    setPdiData((prev: PdiData) => {
+      if (currentPrazo === 'curto') {
+        return { ...prev, curtosPrazos: [...prev.curtosPrazos, actionItem] };
+      } else if (currentPrazo === 'medio') {
+        return { ...prev, mediosPrazos: [...prev.mediosPrazos, actionItem] };
+      } else if (currentPrazo === 'longo') {
+        return { ...prev, longosPrazos: [...prev.longosPrazos, actionItem] };
       }
       return prev;
     });
 
-    // Clear the form fields but keep it open
+    // Clear the form fields but keep it open and keep the prazo
     setNewPdiItem({
       competencia: '',
       calendarizacao: '',
@@ -155,8 +174,9 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
       resultadosEsperados: '',
       status: '1',
       observacao: '',
-      prazo: newPdiItem.prazo // Keep the selected prazo
+      prazo: currentPrazo // Keep the selected prazo
     });
+
     toast.success('Item de PDI adicionado com sucesso!');
   };
 
@@ -266,8 +286,8 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
   const renderActionItems = (category: 'curtosPrazos' | 'mediosPrazos' | 'longosPrazos') => {
     const categoryData = categories.find(cat => cat.key === category)!;
     const items = pdiData[category];
-    const isExpanded = expandedPdiSections[category.replace('Prazos', '') as 'curto' | 'medio' | 'longo'];
-    const isAddingItemToThisCategory = editingPdiItemPrazo === category.replace('Prazos', '') as 'curto' | 'medio' | 'longo';
+    const isExpanded = expandedPdiSections[categoryToPrazo(category)];
+    const isAddingItemToThisCategory = editingPdiItemPrazo === categoryToPrazo(category);
 
     return (
       <motion.div
@@ -276,7 +296,14 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
         className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm dark:shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden"
       >
         <button
-          onClick={() => togglePdiSection(category.replace('Prazos', '') as 'curto' | 'medio' | 'longo')}
+          onClick={() => {
+            // Don't allow closing the section if the form is open
+            if (isAddingItemToThisCategory && isExpanded) {
+              toast.error('Finalize ou cancele a adição do item antes de fechar esta seção.');
+              return;
+            }
+            togglePdiSection(categoryToPrazo(category));
+          }}
           className={`w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 ${categoryData.bgColor} ${categoryData.darkBgColor} border-b ${categoryData.borderColor} hover:opacity-90 transition-all duration-200`}
         >
           <div className="flex items-center justify-between">
@@ -320,7 +347,7 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
                     <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm sm:text-base">Nenhum item de desenvolvimento adicionado</p>
                     <Button
                       variant="outline"
-                      onClick={() => openAddPdiItemForm(category.replace('Prazos', '') as 'curto' | 'medio' | 'longo')}
+                      onClick={() => openAddPdiItemForm(categoryToPrazo(category))}
                       icon={<Plus size={16} />}
                       size="sm"
                     >
@@ -353,7 +380,7 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
                             </div>
                           </div>
                           <button
-                            onClick={() => removePdiItem(item.id, category.replace('Prazos', '') as 'curto' | 'medio' | 'longo')}
+                            onClick={() => removePdiItem(item.id, categoryToPrazo(category))}
                             className="p-1.5 sm:p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                           >
                             <X size={16} className="sm:hidden" />
@@ -465,7 +492,7 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
                         <div className="flex justify-center pt-4">
                             <Button
                             variant="outline"
-                            onClick={() => openAddPdiItemForm(category.replace('Prazos', '') as 'curto' | 'medio' | 'longo')}
+                            onClick={() => openAddPdiItemForm(categoryToPrazo(category))}
                             icon={<Plus size={16} />}
                             className="border-2 border-dashed hover:border-solid"
                             size="sm"
@@ -762,7 +789,9 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg sm:rounded-xl border border-accent-200 dark:border-accent-700">
                 <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Média Geral</h4>
-                <p className="text-2xl sm:text-3xl font-bold text-accent-600 dark:text-accent-400">{calculatePotentialScores().final.toFixed(1)}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-accent-600 dark:text-accent-400">
+                  {calculatePotentialScores().final.toFixed(3).replace(/\.?0+$/, '').replace(/(\.\d)$/, '$10')}
+                </p>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-3">
                   <div
                     className="bg-gradient-to-r from-accent-500 to-accent-600 dark:from-accent-600 dark:to-accent-700 h-2 rounded-full transition-all duration-300"
@@ -870,6 +899,64 @@ const PotentialAndPDI: React.FC<PotentialAndPDIProps> = ({
               {renderActionItems(category.key)}
             </motion.div>
           ))}
+
+          {/* Action buttons for step 3 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 pt-4"
+          >
+            <div className="flex items-center space-x-2 text-sm">
+              {(pdiData.curtosPrazos.length === 0 && pdiData.mediosPrazos.length === 0 && pdiData.longosPrazos.length === 0) ? (
+                <>
+                  <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Adicione pelo menos um item ao PDI para finalizar a avaliação
+                  </span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 dark:text-green-400 flex-shrink-0" />
+                  <span className="text-green-600 dark:text-green-400 font-medium">
+                    PDI preenchido! Você pode salvar como rascunho ou enviar a avaliação completa.
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+              <Button
+                variant="outline"
+                onClick={handlePreviousStep}
+                icon={<ArrowLeft size={18} />}
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                Voltar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSave}
+                icon={<Save size={18} />}
+                size="lg"
+                disabled={isSaving || loading}
+                className="w-full sm:w-auto"
+              >
+                {isSaving ? 'Salvando...' : 'Salvar Rascunho'}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                icon={<Send size={18} />}
+                size="lg"
+                disabled={isSaving || loading || (pdiData.curtosPrazos.length === 0 && pdiData.mediosPrazos.length === 0 && pdiData.longosPrazos.length === 0)}
+                className="w-full sm:w-auto"
+              >
+                {isSaving ? 'Enviando...' : 'Enviar Avaliação'}
+              </Button>
+            </div>
+          </motion.div>
         </motion.div>
       )}
 

@@ -188,8 +188,8 @@ export const evaluationService = {
           leader_evaluation_status: 'pending',
           leader_evaluation_score: null,
           consensus_status: 'pending',
-          consensus_performance_score: null,
-          consensus_potential_score: null
+          consensus_score: null,
+          potential_score: null
         });
       });
 
@@ -220,8 +220,8 @@ export const evaluationService = {
           const emp = employeeMap.get(empId)!;
           emp.consensus_status = cm.status;
           if (cm.status === 'completed') {
-            emp.consensus_performance_score = cm.consensus_performance_score;
-            emp.consensus_potential_score = cm.consensus_potential_score;
+            emp.consensus_score = cm.consensus_score;
+            emp.potential_score = cm.potential_score;
           }
         }
       });
@@ -229,7 +229,7 @@ export const evaluationService = {
       // MOCK TEMPORÁRIO: Gerar notas aleatórias para demonstração do Nine-Box
       const dashboardData = Array.from(employeeMap.values()).map((emp, index) => {
         // Se não tem consenso, usar mock de dados
-        if (!emp.consensus_performance_score || emp.consensus_performance_score === 0) {
+        if (!emp.consensus_score || emp.consensus_score === 0) {
           // Gerar notas variadas para demonstrar diferentes posições no Nine-Box
           const mockScores = [
             { performance: 3.8, potential: 3.7 }, // Alto/Alto
@@ -245,8 +245,8 @@ export const evaluationService = {
 
           // Usar índice para distribuir os colaboradores em diferentes quadrantes
           const mockIndex = index % mockScores.length;
-          emp.consensus_performance_score = mockScores[mockIndex].performance;
-          emp.consensus_potential_score = mockScores[mockIndex].potential;
+          emp.consensus_score = mockScores[mockIndex].performance;
+          emp.potential_score = mockScores[mockIndex].potential;
         }
 
         return emp;
@@ -283,11 +283,11 @@ export const evaluationService = {
         employee_name: item.employee?.name || '',
         position: item.employee?.position || '',
         department: item.employee?.department?.name || '',
-        performance_score: item.consensus_performance_score,
-        potential_score: item.consensus_potential_score,
+        performance_score: item.consensus_score,
+        potential_score: item.potential_score,
         nine_box_position: this.calculateNineBoxPosition(
-          item.consensus_performance_score,
-          item.consensus_potential_score
+          item.consensus_score,
+          item.potential_score
         )
       })) || [];
     } catch (error: any) {
@@ -454,37 +454,74 @@ export const evaluationService = {
       const deliveriesScore = this.calculateCategoryScore(evaluationData.competencies, 'deliveries');
       const finalScore = this.calculateFinalScore(evaluationData.competencies);
 
-      // Criar a avaliação
-      const { data: evaluation, error: evalError } = await supabase
+      // Verificar se já existe avaliação
+      const { data: existingEval } = await supabase
         .from('leader_evaluations')
-        .insert({
-          cycle_id: evaluationData.cycleId,
-          employee_id: evaluationData.employeeId,
-          evaluator_id: evaluationData.evaluatorId,
-          status: 'completed',
-          technical_score: technicalScore,
-          behavioral_score: behavioralScore,
-          deliveries_score: deliveriesScore,
-          final_score: finalScore,
-          potential_score: evaluationData.potentialScore,
-          strengths: evaluationData.feedback?.strengths || '',
-          improvements: evaluationData.feedback?.improvements || '',
-          observations: evaluationData.feedback?.observations || '',
-          evaluation_date: new Date().toISOString().split('T')[0],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
+        .select('id')
+        .eq('cycle_id', evaluationData.cycleId)
+        .eq('employee_id', evaluationData.employeeId)
+        .eq('evaluator_id', evaluationData.evaluatorId)
         .single();
 
-      if (evalError) throw new ApiError(500, evalError.message);
+      let evaluation;
+
+      if (existingEval) {
+        // Atualizar avaliação existente
+        const { data, error: evalError } = await supabase
+          .from('leader_evaluations')
+          .update({
+            status: 'completed',
+            technical_score: technicalScore,
+            behavioral_score: behavioralScore,
+            deliveries_score: deliveriesScore,
+            final_score: finalScore,
+            potential_score: evaluationData.potentialScore,
+            evaluation_date: new Date().toISOString().split('T')[0],
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingEval.id)
+          .select()
+          .single();
+
+        if (evalError) throw new ApiError(500, evalError.message);
+        evaluation = data;
+
+        // Deletar competências antigas
+        await supabase
+          .from('evaluation_competencies')
+          .delete()
+          .eq('leader_evaluation_id', existingEval.id);
+      } else {
+        // Criar nova avaliação
+        const { data, error: evalError } = await supabase
+          .from('leader_evaluations')
+          .insert({
+            cycle_id: evaluationData.cycleId,
+            employee_id: evaluationData.employeeId,
+            evaluator_id: evaluationData.evaluatorId,
+            status: 'completed',
+            technical_score: technicalScore,
+            behavioral_score: behavioralScore,
+            deliveries_score: deliveriesScore,
+            final_score: finalScore,
+            potential_score: evaluationData.potentialScore,
+            evaluation_date: new Date().toISOString().split('T')[0],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (evalError) throw new ApiError(500, evalError.message);
+        evaluation = data;
+      }
 
       // Salvar as competências avaliadas
       if (evaluationData.competencies && evaluationData.competencies.length > 0) {
         const competenciesToInsert = evaluationData.competencies.map((comp: any) => ({
           leader_evaluation_id: evaluation.id,
-          criterion_name: comp.name,
-          criterion_description: comp.description,
+          criterion_name: comp.criterion_name || comp.name,
+          criterion_description: comp.criterion_description || comp.description,
           category: comp.category,
           score: comp.score,
           written_response: comp.written_response || '',
@@ -578,8 +615,8 @@ export const evaluationService = {
           self_evaluation_id: meetingData.selfEvaluationId,
           leader_evaluation_id: meetingData.leaderEvaluationId,
           meeting_date: meetingData.meetingDate,
-          consensus_performance_score: meetingData.performanceScore || 0,
-          consensus_potential_score: meetingData.potentialScore || 0,
+          consensus_score: meetingData.performanceScore || 0,
+          potential_score: meetingData.potentialScore || 0,
           meeting_notes: meetingData.notes || '',
           participants: meetingData.participants || [],
           status: 'scheduled',
@@ -604,8 +641,8 @@ export const evaluationService = {
       const { data: meeting, error } = await supabase
         .from('consensus_meetings')
         .update({
-          consensus_performance_score: data.performanceScore,
-          consensus_potential_score: data.potentialScore,
+          consensus_score: data.performanceScore,
+          potential_score: data.potentialScore,
           meeting_notes: data.notes,
           status: 'completed',
           updated_at: new Date().toISOString()

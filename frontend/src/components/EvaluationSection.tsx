@@ -238,7 +238,9 @@ const EvaluationSection: React.FC<EvaluationSectionProps> = ({
 
             <div className="bg-gradient-to-br from-primary-500 to-secondary-600 dark:from-primary-600 dark:to-secondary-700 p-4 sm:p-6 rounded-xl text-white">
               <h4 className="text-sm font-medium text-primary-100 dark:text-primary-200 mb-1">Nota Final</h4>
-              <p className="text-2xl sm:text-3xl font-bold">{scores.final.toFixed(1)}</p>
+              <p className="text-2xl sm:text-3xl font-bold">
+                {scores.final.toFixed(3).replace(/\.?0+$/, '').replace(/(\.\d)$/, '$10')}
+              </p>
               <p className="text-xs text-primary-100 dark:text-primary-200 mt-1">Média Ponderada</p>
               <div className="flex items-center mt-3">
                 <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />

@@ -87,6 +87,7 @@ const LeaderEvaluation = () => {
   const [hasExistingEvaluation, setHasExistingEvaluation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [leaderEvaluationId, setLeaderEvaluationId] = useState<string | null>(null);
+  const [pdiLoadedForEmployee, setPdiLoadedForEmployee] = useState<string | null>(null);
 
   const [sections, setSections] = useState<SectionProps[]>([ // Explicitly type sections state
     {
@@ -200,15 +201,17 @@ const LeaderEvaluation = () => {
   const loadExistingPDI = async (employeeId: string) => {
     try {
       const existingPDI = await pdiService.getPDI(employeeId);
-      
+
       if (existingPDI) {
         const transformedPDI = pdiService.transformPDIDataFromAPI(existingPDI);
         setPdiData(prev => ({
-          ...transformedPDI,
+          ...prev, // Keep current state first
+          ...transformedPDI, // Then merge loaded PDI
           colaboradorId: employeeId,
-          colaborador: prev.colaborador || transformedPDI.colaborador,
-          cargo: prev.cargo || transformedPDI.cargo,
-          departamento: prev.departamento || transformedPDI.departamento,
+          // Only use loaded data if prev is empty, otherwise keep prev (user might be editing)
+          curtosPrazos: prev.curtosPrazos.length > 0 ? prev.curtosPrazos : transformedPDI.curtosPrazos,
+          mediosPrazos: prev.mediosPrazos.length > 0 ? prev.mediosPrazos : transformedPDI.mediosPrazos,
+          longosPrazos: prev.longosPrazos.length > 0 ? prev.longosPrazos : transformedPDI.longosPrazos,
         }));
         toast('PDI existente carregado para edição');
       }
@@ -225,35 +228,51 @@ const LeaderEvaluation = () => {
         const exists = await checkExistingEvaluation(currentCycle.id, selectedEmployeeId, 'leader');
         setHasExistingEvaluation(exists);
         if (exists) {
-          toast.error('Já existe uma avaliação para este colaborador neste ciclo');
-          setSelectedEmployeeId('');
-          return;
+          toast('Avaliação já foi concluída para este colaborador. Você pode editá-la e reenviá-la.', {
+            icon: '✅',
+            duration: 4000,
+          });
         }
 
-        // Load existing PDI
-        await loadExistingPDI(selectedEmployeeId);
-      }
+        // Load existing PDI only once per employee
+        if (pdiLoadedForEmployee !== selectedEmployeeId) {
+          await loadExistingPDI(selectedEmployeeId);
+          setPdiLoadedForEmployee(selectedEmployeeId);
+        }
 
-      if (selectedEmployeeId) {
+        // Only update employee info, not the PDI items
         const employeeProfile = subordinates.find(sub => sub.id === selectedEmployeeId);
         if (employeeProfile) {
-          setPdiData((prev: PdiData) => ({ // Explicitly type prev
-            ...prev,
+          setPdiData((prev: PdiData) => ({
+            ...prev, // Keep ALL previous state including PDI items
             colaboradorId: employeeProfile.id,
             colaborador: employeeProfile.name,
             cargo: employeeProfile.position,
             departamento: Array.isArray(employeeProfile.departments)
               ? employeeProfile.departments.map(dep => dep.name).join(', ')
               : employeeProfile.departments || 'Não definido',
-            periodo: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+            periodo: prev.periodo || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
             dataCriacao: prev.dataCriacao || new Date().toISOString(),
             dataAtualizacao: new Date().toISOString(),
           }));
         }
+      } else if (!selectedEmployeeId) {
+        // Reset PDI data when no employee is selected
+        setPdiData({
+          colaboradorId: '',
+          colaborador: '',
+          cargo: '',
+          departamento: '',
+          periodo: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+          curtosPrazos: [],
+          mediosPrazos: [],
+          longosPrazos: []
+        });
+        setPdiLoadedForEmployee(null);
       }
     };
     checkAndPopulate();
-  }, [currentCycle, selectedEmployeeId, checkExistingEvaluation, subordinates]);
+  }, [currentCycle, selectedEmployeeId, checkExistingEvaluation, subordinates, pdiLoadedForEmployee]);
 
   const calculateScores = (): Scores => {
     const newScores: Scores = { technical: 0, behavioral: 0, organizational: 0, final: 0 };
@@ -572,6 +591,7 @@ const LeaderEvaluation = () => {
         periodMessage={getCyclePeriodMessage()} // Ensure this matches the type
         pdiData={pdiData}
         setPdiData={setPdiData}
+        hasExistingEvaluation={hasExistingEvaluation}
       />
 
       {selectedEmployeeId && (

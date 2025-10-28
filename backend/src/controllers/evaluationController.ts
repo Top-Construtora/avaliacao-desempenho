@@ -285,12 +285,14 @@ export const evaluationController = {
   async createLeaderEvaluation(req: Request, res: Response, next: NextFunction) {
     try {
       const authReq = req as AuthRequest;
-      
+
+      // Use supabaseAdmin to bypass RLS for leader evaluations
+      const { supabaseAdmin } = await import('../config/supabase');
       const evaluation = await evaluationService.createLeaderEvaluation(
-        authReq.supabase,
+        supabaseAdmin,
         req.body
       );
-      
+
       res.json({
         success: true,
         data: evaluation

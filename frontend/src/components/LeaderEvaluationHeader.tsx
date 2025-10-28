@@ -19,6 +19,7 @@ interface LeaderEvaluationHeaderProps {
   periodMessage: { type: 'warning' | 'error', message: string } | null;
   pdiData: any; // PDI data passed from parent
   setPdiData: React.Dispatch<React.SetStateAction<any>>; // Setter for PDI data
+  hasExistingEvaluation?: boolean;
 }
 
 const LeaderEvaluationHeader: React.FC<LeaderEvaluationHeaderProps> = ({
@@ -31,7 +32,8 @@ const LeaderEvaluationHeader: React.FC<LeaderEvaluationHeaderProps> = ({
   progress,
   periodMessage,
   pdiData,
-  setPdiData
+  setPdiData,
+  hasExistingEvaluation
 }) => {
   const selectedEmployee = subordinates.find(emp => emp.id === selectedEmployeeId);
   const { getNineBoxByEmployeeId } = useEvaluation(); // Get the hook here
@@ -113,6 +115,13 @@ const LeaderEvaluationHeader: React.FC<LeaderEvaluationHeaderProps> = ({
           }`}>
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <p className="text-sm">{periodMessage.message}</p>
+          </div>
+        )}
+
+        {hasExistingEvaluation && selectedEmployeeId && (
+          <div className="mt-4 p-3 rounded-lg flex items-start space-x-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700">
+            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <p className="text-sm font-medium">A avaliação já foi concluída. Você pode editá-la e reenviá-la para atualizar.</p>
           </div>
         )}
 

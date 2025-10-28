@@ -40,7 +40,6 @@ export const pdiService = {
             items: pdiData.items,
             cycle_id: pdiData.cycleId,
             leader_evaluation_id: pdiData.leaderEvaluationId,
-            periodo: pdiData.periodo,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingPDI.id)
@@ -58,7 +57,6 @@ export const pdiService = {
             cycle_id: pdiData.cycleId,
             leader_evaluation_id: pdiData.leaderEvaluationId,
             items: pdiData.items,
-            periodo: pdiData.periodo,
             status: 'active',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

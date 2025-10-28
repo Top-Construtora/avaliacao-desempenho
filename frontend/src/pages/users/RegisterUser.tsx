@@ -85,7 +85,6 @@ const RegisterUser = () => {
     // Novos campos de perfil pessoal
     gender: null as any,
     has_children: false,
-    children_age_ranges: [] as string[],
     marital_status: null as any,
     hobbies: '',
     favorite_color: '',
@@ -362,7 +361,6 @@ const RegisterUser = () => {
         // Novos campos
         gender: formData.gender,
         has_children: formData.has_children,
-        children_age_ranges: formData.has_children ? formData.children_age_ranges : [],
         marital_status: formData.marital_status,
         hobbies: formData.hobbies || null,
         favorite_color: formData.favorite_color || null,

@@ -117,7 +117,7 @@ const SalaryAdminPage = () => {
       toast.success('Trilha de carreira criada com sucesso!');
       setShowCreateTrackModal(false);
       // Navega para a página de detalhes da nova trilha para continuar a configuração
-      navigate(`/salary/admin/tracks/${newTrack.id}`);
+      navigate(`/salary/tracks/${newTrack.id}`);
     } catch (error: any) {
       console.error('Erro detalhado ao criar trilha:', error);
       

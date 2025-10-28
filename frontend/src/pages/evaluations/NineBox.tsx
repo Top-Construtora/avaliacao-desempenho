@@ -123,8 +123,8 @@ useEffect(() => {
           ...d,
           user: user || null,
           // Garante que sempre há valores para as notas
-          consensus_performance_score: d.consensus_performance_score || 0,
-          consensus_potential_score: d.consensus_potential_score || 0,
+          consensus_score: d.consensus_score || 0,
+          potential_score: d.potential_score || 0,
           // Garante que outros campos necessários existam
           employee_name: d.employee_name || user?.name || 'Sem nome',
           position: d.position || user?.position || 'Sem cargo'
@@ -206,8 +206,8 @@ useEffect(() => {
     if (!selectedEvaluation) return false;
     
     const quadrant = getQuadrant(
-      selectedEvaluation.consensus_performance_score, 
-      selectedEvaluation.consensus_potential_score
+      selectedEvaluation.consensus_score, 
+      selectedEvaluation.potential_score
     );
     return quadrant.row === row && quadrant.col === col;
   };
@@ -215,8 +215,8 @@ useEffect(() => {
   const getActiveQuadrantInfo = () => {
     if (!selectedEvaluation) return null;
     const quadrant = getQuadrant(
-      selectedEvaluation.consensus_performance_score, 
-      selectedEvaluation.consensus_potential_score
+      selectedEvaluation.consensus_score, 
+      selectedEvaluation.potential_score
     );
     const key = `${quadrant.row},${quadrant.col}`;
     return matrixConfig[key];
@@ -369,12 +369,12 @@ useEffect(() => {
                     <TrendingUp className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                   </div>
                   <p className="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400">
-                    {selectedEvaluation.consensus_performance_score.toFixed(1)}
+                    {selectedEvaluation.consensus_score.toFixed(1)}
                   </p>
                   <div className="mt-2 bg-primary-200 dark:bg-primary-900/50 rounded-full h-2">
                     <div 
                       className="bg-primary-600 dark:bg-primary-400 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(selectedEvaluation.consensus_performance_score / 4) * 100}%` }}
+                      style={{ width: `${(selectedEvaluation.consensus_score / 4) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -386,12 +386,12 @@ useEffect(() => {
                     <Target className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
                   </div>
                   <p className="text-2xl sm:text-3xl font-bold text-secondary-600 dark:text-secondary-400">
-                    {selectedEvaluation.consensus_potential_score.toFixed(1)}
+                    {selectedEvaluation.potential_score.toFixed(1)}
                   </p>
                   <div className="mt-2 bg-secondary-200 dark:bg-secondary-900/50 rounded-full h-2">
                     <div 
                       className="bg-secondary-600 dark:bg-secondary-400 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(selectedEvaluation.consensus_potential_score / 4) * 100}%` }}
+                      style={{ width: `${(selectedEvaluation.potential_score / 4) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -481,8 +481,8 @@ useEffect(() => {
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
                         className="absolute w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-primary-500 to-secondary-600 dark:from-primary-600 dark:to-secondary-700 rounded-full shadow-lg dark:shadow-xl z-20 ring-4 ring-white dark:ring-gray-800"
                         style={{
-                          left: `${getPointPosition(selectedEvaluation.consensus_performance_score, selectedEvaluation.consensus_potential_score).x}%`,
-                          top: `${getPointPosition(selectedEvaluation.consensus_performance_score, selectedEvaluation.consensus_potential_score).y}%`,
+                          left: `${getPointPosition(selectedEvaluation.consensus_score, selectedEvaluation.potential_score).x}%`,
+                          top: `${getPointPosition(selectedEvaluation.consensus_score, selectedEvaluation.potential_score).y}%`,
                           transform: 'translate(-50%, -50%)'
                         }}
                       />

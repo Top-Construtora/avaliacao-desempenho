@@ -51,7 +51,9 @@ export const pdiController = {
 
       console.log('✅ Controller - Validação passou, enviando para service');
 
-      const pdi = await pdiService.savePDI(authReq.supabase, {
+      // Use supabaseAdmin to bypass RLS for PDI operations
+      const { supabaseAdmin } = await import('../config/supabase');
+      const pdi = await pdiService.savePDI(supabaseAdmin, {
         employeeId,
         items: processedItems,
         cycleId,

@@ -361,7 +361,7 @@ const SelfEvaluation = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
         <CheckCircle className="h-12 w-12 text-green-500 dark:text-green-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Autoavaliação já realizada
+          A avaliação já foi feita
         </h3>
         <p className="text-gray-600 dark:text-gray-400 mb-4">
           Você já completou sua autoavaliação para o ciclo: <strong>{currentCycle?.title}</strong>
