@@ -59,6 +59,7 @@ const RegisterUser = () => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
   const [filteredPositions, setFilteredPositions] = useState<Position[]>([]);
+  const [filteredTeams, setFilteredTeams] = useState<any[]>([]);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [positionsLoading, setPositionsLoading] = useState(false);
 
@@ -69,7 +70,7 @@ const RegisterUser = () => {
     position: '',
     isLeader: false,
     isDirector: false,
-    teamIds: [] as string[],
+    teamId: '',
     profileType: 'regular' as 'regular' | 'leader' | 'director',
     phone: '',
     birthDate: '',
@@ -195,6 +196,21 @@ const RegisterUser = () => {
     }
   }, [formData.trackId, positions]);
 
+  // Filtrar times por departamento
+  useEffect(() => {
+    if (formData.departmentId) {
+      const filtered = teams.filter(team => team.department_id === formData.departmentId);
+      setFilteredTeams(filtered);
+      // Se o time selecionado não pertence ao departamento, limpa a seleção
+      if (formData.teamId && !filtered.find(t => t.id === formData.teamId)) {
+        setFormData(prev => ({ ...prev, teamId: '' }));
+      }
+    } else {
+      setFilteredTeams([]);
+      setFormData(prev => ({ ...prev, teamId: '' }));
+    }
+  }, [formData.departmentId, teams]);
+
   // Atualizar position quando positionId mudar
   useEffect(() => {
     if (formData.positionId) {
@@ -319,8 +335,8 @@ const RegisterUser = () => {
       }
     }
     
-    if (formData.teamIds.length === 0 && formData.profileType !== 'director') {
-      errors.teams = 'Selecione pelo menos um time';
+    if (!formData.teamId && formData.profileType !== 'director') {
+      errors.teams = 'Selecione um time';
     }
     if (formData.profileType === 'regular' && !formData.reportsTo) {
       errors.reportsTo = 'Selecione um líder';
@@ -370,16 +386,14 @@ const RegisterUser = () => {
         sports: formData.practices_sports ? formData.sports : []
       });
 
-      // Adicionar usuário aos times, se especificado
-      if (formData.teamIds && formData.teamIds.length > 0 && formData.profileType !== 'director') {
-        const teamMembers = formData.teamIds.map(teamId => ({
-          team_id: teamId,
-          user_id: user.id,
-        }));
-
+      // Adicionar usuário ao time, se especificado
+      if (formData.teamId && formData.profileType !== 'director') {
         await supabase
           .from('team_members')
-          .insert(teamMembers);
+          .insert({
+            team_id: formData.teamId,
+            user_id: user.id,
+          });
       }
 
       await reloadUsers();
@@ -956,45 +970,50 @@ const RegisterUser = () => {
               <Users className="h-5 w-5 mr-2 text-primary-500 dark:text-primary-400" />
               Alocação em Times *
             </h3>
-            <div className="max-h-64 overflow-y-auto pr-2 space-y-2">
-              {teams.map(team => (
-                <label key={team.id} className={`flex items-center p-4 rounded-xl cursor-pointer transition-all group ${
-                  formData.teamIds.includes(team.id)
-                    ? 'bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-500 dark:border-primary-400'
-                    : 'bg-gray-50 dark:bg-gray-700/30 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                }`}>
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-primary-600 dark:text-primary-500 focus:ring-primary-500 dark:focus:ring-primary-400"
-                    checked={formData.teamIds.includes(team.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({ ...formData, teamIds: [...formData.teamIds, team.id] });
-                      } else {
-                        setFormData({ ...formData, teamIds: formData.teamIds.filter(id => id !== team.id) });
-                      }
-                    }}
-                  />
-                  <div className="ml-4 flex-1">
-                    <span className="font-medium text-gray-900 dark:text-gray-100 block">{team.name}</span>
-                    {team.department && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Depto: {team.department.name}
-                      </span>
-                    )}
-                  </div>
-                  {formData.teamIds.includes(team.id) && (
-                    <CheckCircle2 className="h-5 w-5 text-primary-600 dark:text-primary-400 ml-2" />
-                  )}
-                </label>
-              ))}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Selecione o Time
+              </label>
+              <div className="relative">
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                <select
+                  value={formData.teamId}
+                  onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
+                  className={`w-full pl-12 pr-10 py-3 rounded-xl border-2 transition-all appearance-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                    formErrors.teams
+                      ? 'border-red-300 dark:border-red-600 focus:border-red-500 dark:focus:border-red-500 focus:ring-red-500 dark:focus:ring-red-400'
+                      : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-primary-500 dark:focus:ring-primary-400'
+                  }`}
+                  disabled={!formData.departmentId || filteredTeams.length === 0}
+                >
+                  <option value="">
+                    {!formData.departmentId
+                      ? 'Selecione um departamento primeiro'
+                      : filteredTeams.length === 0
+                        ? 'Nenhum time disponível neste departamento'
+                        : 'Selecione um time'}
+                  </option>
+                  {filteredTeams.map(team => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {formErrors.teams && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-2 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {formErrors.teams}
+                </p>
+              )}
+              {formData.departmentId && filteredTeams.length === 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  Não há times cadastrados para este departamento
+                </p>
+              )}
             </div>
-            {formErrors.teams && (
-              <p className="text-sm text-red-600 dark:text-red-400 mt-2 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {formErrors.teams}
-              </p>
-            )}
           </motion.div>
         )}
 
